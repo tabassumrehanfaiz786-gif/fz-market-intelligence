@@ -1,0 +1,20 @@
+import { createServerFn } from '@tanstack/react-start';
+import { z } from 'zod';
+import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
+import { funds, dailyFlows, fixtureSource, fixtureTimestamp } from './fixtures';
+import { aggregateFlows, divergence } from './calculations';
+export const getWorkspace = createServerFn({method:'GET'}).middleware([requireSupabaseAuth]).handler(async({context})=>{
+ const [profile,cases,roles,entitlements,audit]=await Promise.all([context.supabase.from('profiles').select('*').eq('id',context.userId).single(),context.supabase.from('cases').select('*').eq('owner_id',context.userId).order('updated_at',{ascending:false}).limit(100),context.supabase.from('user_roles').select('role').eq('user_id',context.userId),context.supabase.from('entitlements').select('*').eq('user_id',context.userId),context.supabase.from('audit_events').select('*').eq('actor_id',context.userId).order('occurred_at',{ascending:false}).limit(30)]);
+ if(cases.error||profile.error)throw new Error('Your workspace could not be loaded. Please retry.');
+ return {profile:profile.data,cases:cases.data??[],roles:roles.data??[],entitlements:entitlements.data??[],audit:audit.data??[]};
+});
+const caseInput=z.object({id:z.string().uuid().optional(),title:z.string().trim().min(1).max(200),question:z.string().max(4000),conclusion:z.string().max(10000),alternatives:z.string().max(5000),limitations:z.string().max(5000),status:z.enum(['draft','reviewing','closed'])});
+export const saveCase = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator((input:unknown)=>caseInput.parse(input)).handler(async({context,data})=>{
+ const flow=aggregateFlows(funds.map(f=>f.net));const latest=dailyFlows.at(-1);const prior=dailyFlows.at(-2);const divergent=latest&&prior?divergence(latest.flow,latest.price-prior.price):false;
+ const evidence=[{metric:'Aggregate ETF net flow',value:`${flow.toFixed(1)} million USD`,source:fixtureSource,timestamp:fixtureTimestamp},{metric:'Spot cumulative volume delta',value:'428.51 BTC',source:fixtureSource,timestamp:fixtureTimestamp},{metric:'Perpetual cumulative volume delta',value:'-187.34 BTC',source:fixtureSource,timestamp:fixtureTimestamp},{metric:'Positive flow / falling price',value:String(divergent),source:'FZ divergence rule v1.0 · simulation',timestamp:fixtureTimestamp}];
+ const values={owner_id:context.userId,title:data.title,research_question:data.question,conclusion:data.conclusion,alternative_explanations:data.alternatives,limitations:data.limitations,status:data.status,evidence,data_status:'simulated',updated_at:new Date().toISOString()};
+ const result=data.id?await context.supabase.from('cases').update(values).eq('id',data.id).eq('owner_id',context.userId).select().single():await context.supabase.from('cases').insert(values).select().single();
+ if(result.error)throw new Error('The case could not be saved. No changes were confirmed.');return result.data;
+});
+export const updateProfile=createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator((input:unknown)=>z.object({displayName:z.string().trim().max(100),timezone:z.enum(['UTC','Asia/Kolkata','Europe/London','America/New_York'])}).parse(input)).handler(async({context,data})=>{const {error}=await context.supabase.from('profiles').update({display_name:data.displayName,timezone:data.timezone}).eq('id',context.userId);if(error)throw new Error('Profile could not be saved.');return {success:true};});
+export const getAdminHealth=createServerFn({method:'GET'}).middleware([requireSupabaseAuth]).handler(async({context})=>{const {data:allowed,error}=await context.supabase.rpc('has_role',{_user_id:context.userId,_role:'admin'});if(error||!allowed)throw new Error('Administrator permission is required.');const {data,error:providerError}=await context.supabase.from('providers').select('*');if(providerError)throw new Error('Provider diagnostics could not be read.');return {providers:data,checkedAt:new Date().toISOString(),storage:'Not measured',ingestion:'No ingestion configured'};});
