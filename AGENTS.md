@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep market visualization in a dedicated browser-safe canvas component, separate from the page controls; this keeps drawing and interaction isolated.
+- Until a verified market feed is connected, render deterministic simulation data with explicit simulation labels; this prevents sample observations being mistaken for live or historical evidence.
