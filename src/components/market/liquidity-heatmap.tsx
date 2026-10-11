@@ -22,7 +22,7 @@ export function LiquidityHeatmap({ timeframe, intensity, bubbles, vwap, market, 
    const gutter = width<500?57:72, profile = width<500?32:65, w = width-gutter-profile, h = height-45;
    context.fillStyle=color('--chart-bg'); context.fillRect(0,0,width,height);
    const cols=180, rows=105, cellW=w/cols, cellH=h/rows;
-   const shift = timeframes.indexOf(timeframe)*.6 + (market==='Perpetual'?2:0);
+   const shift = timeframes.indexOf(timeframe)*.6 + (market==='Perpetual'?2:0) + tick / 1200;
    const path = (x:number) => .66 - x*.36 + Math.sin(x*15+shift)*.073 + Math.sin(x*34)*.019;
    for(let y=0;y<rows;y++) {
     for(let x=0;x<cols;x++) {
