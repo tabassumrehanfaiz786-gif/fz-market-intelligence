@@ -11,3 +11,6 @@
 
 - Keep market visualization in a dedicated browser-safe canvas component, separate from the page controls; this keeps drawing and interaction isolated.
 - Until a verified market feed is connected, render deterministic simulation data with explicit simulation labels; this prevents sample observations being mistaken for live or historical evidence.
+- Use a shared terminal shell with separate file-based routes for research modules; this keeps navigation consistent without crowding the dashboard.
+- Keep reproducible research fixtures and pure calculations separate from real Cloud observation tables; this prevents demo evidence contaminating recorded market data.
+- Use authenticated server functions and owner-scoped RLS for personal case files and separate protected role rows for privileges; this enforces data isolation independently of UI visibility.
