@@ -1,24 +1,63 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from '@tanstack/react-router';
+import { useState } from 'react';
+import { Activity, ArrowDownLeft, ArrowUpRight, Bell, Bitcoin, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Download, Expand, Layers, Menu, Pause, Play, Radio, Settings2, ShieldCheck, SlidersHorizontal, Waves, ZoomIn, ZoomOut } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { LiquidityHeatmap, timeframes, type Timeframe } from '@/components/market/liquidity-heatmap';
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
-export const Route = createFileRoute("/")({
-  component: Index,
+export const Route = createFileRoute('/')({
+ head:()=>({meta:[{title:'BTC Liquidity Heatmap — Fz Market Intelligence'},{name:'description',content:'Explore BTC spot and perpetual liquidity heatmaps with minute-to-year windows, trade bubbles and volume delta. Clearly labeled simulation until a verified feed is connected.'},{property:'og:title',content:'Fz Market Intelligence — Market Liquidity'},{property:'og:description',content:'Institutional-style BTC liquidity heatmaps, depth profiles and minute-to-year market windows.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary_large_image'}]}),
+ component:Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+function Index(){
+ const [timeframe,setTimeframe]=useState<Timeframe>('4h');
+ const [market,setMarket]=useState('Spot');
+ const [intensity,setIntensity]=useState(65);
+ const [bubbles,setBubbles]=useState(true);
+ const [vwap,setVwap]=useState(true);
+ const [collapsed,setCollapsed]=useState(false);
+ const [playing,setPlaying]=useState(false);
+ const [zoom,setZoom]=useState(1);
+ const [notice,setNotice]=useState('');
+ const [details,setDetails]=useState(false);
+ const [expanded,setExpanded]=useState(false);
+ const [showControls,setShowControls]=useState(true);
+ const exportData=()=>{const blob=new Blob([`data_status,market,time_window,source\nsimulation,BTCUSDT ${market},${timeframe},deterministic visual simulation\n`],{type:'text/csv'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='fz-market-simulation-metadata.csv';a.click();URL.revokeObjectURL(url);setNotice('Simulation metadata exported. No real market observations are included.');};
+ return <div className={`terminal-shell ${collapsed?'collapsed':''}`}>
+  <aside className="sidebar">
+   <div className="flex items-center gap-3"><div className="brand-mark">Fz</div><div className="sidebar-copy brand-title">Market<br/>Intelligence</div></div>
+   <div className="sidebar-label">Workspace</div>
+   <Button variant="terminal" className="nav-item" data-active="true" title="Market liquidity" onClick={()=>setDetails(false)}><Layers/><span className="sidebar-copy">Market liquidity</span></Button>
+   <div className="sidebar-label">Markets</div>
+   <Button variant="terminal" className="nav-item" data-active={market==='Spot'} title="BTC spot heatmap" onClick={()=>{setMarket('Spot');setDetails(false);}}><Activity/><span className="sidebar-copy">Spot heatmap</span></Button>
+   <Button variant="terminal" className="nav-item" data-active={market==='Perpetual'} title="BTC perpetual heatmap" onClick={()=>{setMarket('Perpetual');setDetails(false);}}><Waves/><span className="sidebar-copy">Perpetual heatmap</span></Button>
+   <div className="sidebar-label">Research</div>
+   <Button variant="ghost" className="nav-item text-muted-foreground" title="Data and methodology" onClick={()=>setDetails(s=>!s)}><ShieldCheck/><span className="sidebar-copy">Data & methodology</span></Button>
+   <div className="mt-auto border-t border-border pt-4"><div className="sidebar-copy flex items-center gap-2 text-[11px] text-muted-foreground"><span className="status-dot"/>Simulation workspace</div><div className="sidebar-copy mt-2 text-[10px] text-muted-foreground">No market feed connected</div><Button variant="ghost" size="icon" className="mt-3 text-muted-foreground" title={collapsed?'Expand sidebar':'Collapse sidebar'} onClick={()=>setCollapsed(s=>!s)}>{collapsed?<ChevronRight/>:<ChevronLeft/>}</Button></div>
+  </aside>
+  <div className="workspace">
+   <header className="topbar"><div className="flex min-w-0 items-center gap-3"><Button variant="ghost" size="icon" className="hidden sm:inline-flex text-muted-foreground" title="Toggle sidebar" onClick={()=>setCollapsed(s=>!s)}><Menu/></Button><span className="text-xs text-muted-foreground hidden sm:inline">Workspace</span><ChevronRight className="size-3 text-muted-foreground hidden sm:inline"/><span className="text-xs hidden sm:inline">Market liquidity</span><div className="flex items-center gap-2 sm:hidden"><span className="text-primary font-semibold text-xl">Fz</span><span className="text-[11px] font-medium">Market Intelligence</span></div></div><div className="flex items-center gap-4 shrink-0"><span className="flex items-center gap-2 text-[10px] text-analysis"><span className="status-dot"/>SIMULATION</span><Button variant="ghost" size="icon" title="Feed notifications" className="text-muted-foreground hidden sm:inline-flex" onClick={()=>setNotice('Market feed is disconnected. All visible chart values are simulated.')}><Bell/></Button><span className="size-7 border border-border rounded-full grid place-items-center text-[10px] bg-secondary">FZ</span></div></header>
+   <main className="content">
+    <div className="market-heading"><div className="min-w-0"><div className="eyebrow">Market intelligence / Liquidity</div><h1>Market liquidity</h1><p className="text-xs text-muted-foreground">Order-book depth, executed trades & liquidity concentration.</p></div><Button variant="outline" size="sm" onClick={exportData} title="Export simulation metadata"><Download/><span className="hidden sm:inline">Export</span></Button></div>
+    <div className="market-stats">
+     <div className="market-stat"><div className="stat-label"><Bitcoin className="size-3 text-primary"/>BTC / USDT <span className="ml-auto text-analysis">SIM</span></div><div className="stat-value">86,642.50 <span className="text-[10px] text-muted-foreground">USDT</span></div><div className="stat-foot text-positive">+1.24% <span className="text-muted-foreground">· simulated change</span></div></div>
+     <div className="market-stat"><div className="stat-label">Displayed liquidity</div><div className="stat-value">1,284.6 <span className="text-[10px] text-muted-foreground">BTC</span></div><div className="stat-foot">Simulated resting depth</div></div>
+     <div className="market-stat"><div className="stat-label">Bid / ask imbalance</div><div className="stat-value text-positive">+18.42<span className="text-sm">%</span></div><div className="stat-foot">Simulated buy-side bias</div></div>
+     <div className="market-stat"><div className="stat-label">Cumulative delta</div><div className="stat-value text-positive">+428.51</div><div className="stat-foot">BTC · simulated trades</div></div>
+     <div className="market-stat"><div className="stat-label">VWAP</div><div className="stat-value text-analysis">86,381.20</div><div className="stat-foot">USDT · simulated average</div></div>
     </div>
-  );
+    {details&&<section className="mb-5 border-y border-border py-4"><h2 className="font-medium text-sm">Data & methodology</h2><p className="mt-2 text-xs text-muted-foreground leading-6">This workspace displays a deterministic visual simulation, not live prices, historical order-book depth or verified trade executions. Heatmap intensity represents simulated resting depth; green and red bubbles represent simulated buy and sell executions. All minute-to-year windows are illustrative. Real historical replay requires recorded depth covering the selected period. No exchange is connected.</p></section>}
+    <section className="chart-panel" ref={el=>{if(el&&expanded)el.scrollIntoView({block:'start',behavior:'smooth'});}}>
+     <div className="chart-toolbar"><div className="flex items-center gap-2"><select className="market-select" aria-label="Market pair"><option>BTC / USDT</option></select><div className="flex gap-1 border-l border-border pl-2">{['Spot','Perpetual'].map(m=><Button key={m} variant="terminal" size="sm" data-active={market===m} onClick={()=>setMarket(m)}>{m}</Button>)}</div></div><div className="flex items-center gap-2"><Button variant="ghost" size="icon" title="Chart settings" className="text-muted-foreground h-7 w-7" onClick={()=>setShowControls(s=>!s)}><Settings2/></Button><Button variant="ghost" size="icon" title={expanded?'Exit fullscreen':'Expand chart'} className="text-muted-foreground h-7 w-7" onClick={()=>{const panel=document.querySelector('.chart-panel');if(!document.fullscreenElement){panel?.requestFullscreen?.().then(()=>setExpanded(true)).catch(()=>setNotice('Fullscreen is unavailable in this preview.'));}else{document.exitFullscreen().then(()=>setExpanded(false));}}}><Expand/></Button></div></div>
+     <div className="chart-toolbar"><div className="timeframe-row"><span className="text-[10px] text-muted-foreground mr-2 hidden lg:inline">TIMEFRAME</span>{timeframes.map(t=><Button key={t} variant="terminal" data-active={timeframe===t} aria-pressed={timeframe===t} onClick={()=>setTimeframe(t)}>{t}</Button>)}</div><div className="flex items-center gap-2"><Button variant="terminal" size="sm" data-active={playing} onClick={()=>setPlaying(s=>!s)}>{playing?<Pause className="size-3"/>:<Play className="size-3"/>}{playing?'Pause':'Replay'}</Button><span className="text-[10px] text-muted-foreground">SIM</span></div></div>
+     <div className="chart-subbar"><div className="flex items-center gap-2"><span className="font-medium">BTCUSDT</span><span className="text-muted-foreground">· {market} · {timeframe}</span><span className="text-analysis border border-analysis/25 bg-analysis/5 rounded px-1.5 py-0.5 text-[9px]">SIMULATED</span></div>{showControls&&<div className="flex flex-wrap gap-3"><label className="control-label"><input type="checkbox" checked={bubbles} onChange={e=>setBubbles(e.target.checked)}/>Trades</label><label className="control-label"><input type="checkbox" checked={vwap} onChange={e=>setVwap(e.target.checked)}/>VWAP</label><label className="control-label"><SlidersHorizontal className="size-3"/>Intensity<input aria-label="Heatmap intensity" type="range" min="25" max="100" value={intensity} onChange={e=>setIntensity(Number(e.target.value))}/></label></div>}</div>
+     <LiquidityHeatmap timeframe={timeframe} market={market} intensity={intensity} bubbles={bubbles} vwap={vwap} zoom={zoom} playing={playing}/>
+     <div className="chart-footer"><div className="flex items-center gap-4"><span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-positive"/>Buy trades</span><span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-negative"/>Sell trades</span><span className="flex items-center gap-1.5 text-analysis">— VWAP</span></div><div className="flex items-center gap-2"><span>Price range</span><Button variant="ghost" size="icon" className="h-5 w-5" title="Zoom out" disabled={zoom<=1} onClick={()=>setZoom(z=>Math.max(1,z-.25))}><ZoomOut/></Button><span className="font-mono">{zoom.toFixed(2)}×</span><Button variant="ghost" size="icon" className="h-5 w-5" title="Zoom in" disabled={zoom>=3} onClick={()=>setZoom(z=>Math.min(3,z+.25))}><ZoomIn/></Button></div></div>
+    </section>
+    <div className="lower-grid"><section><h2 className="section-title"><span className="flex items-center gap-2"><Activity className="size-3.5 text-positive"/>Cumulative volume delta <span className="text-muted-foreground text-[9px]">SIMULATED</span></span><span className="font-mono text-positive text-[11px]">+428.51 BTC</span></h2><div className="delta-chart"><svg viewBox="0 0 600 125" preserveAspectRatio="none" aria-label="Simulated cumulative volume delta"><path className="delta-grid" d="M0 30H600 M0 60H600 M0 90H600 M100 0V125 M200 0V125 M300 0V125 M400 0V125 M500 0V125"/><path className="delta-fill" d="M0 106L25 102L45 109L68 94L85 98L110 84L130 88L145 72L175 79L200 63L215 67L240 34L255 40L275 22L295 31L315 24L335 39L355 36L380 42L400 34L425 39L450 32L480 37L510 30L535 36L565 29L600 33V125H0Z"/><path className="delta-line" d="M0 106L25 102L45 109L68 94L85 98L110 84L130 88L145 72L175 79L200 63L215 67L240 34L255 40L275 22L295 31L315 24L335 39L355 36L380 42L400 34L425 39L450 32L480 37L510 30L535 36L565 29L600 33"/></svg></div><div className="flex justify-between mt-2 font-mono text-[9px] text-muted-foreground"><span>Window start</span><span>{timeframe} · simulated trade flow</span><span>Window end</span></div></section><section><h2 className="section-title"><span className="flex items-center gap-2"><Layers className="size-3.5 text-primary"/>Liquidity levels</span><span className="text-[9px] text-muted-foreground">SIMULATED · BTC</span></h2><table className="depth-table"><thead><tr><th>Price (USDT)</th><th>Bid depth</th><th>Ask depth</th><th>Side</th></tr></thead><tbody>{[['87,000.00','—','128.42','Ask'],['86,800.00','—','94.18','Ask'],['86,400.00','142.65','—','Bid'],['86,000.00','186.32','—','Bid']].map(row=><tr key={row[0]}><td>{row[0]}</td><td className="text-positive">{row[1]}</td><td className="text-negative">{row[2]}</td><td className={row[3]==='Bid'?'text-positive':'text-negative'}><span className="inline-flex items-center gap-1">{row[3]==='Bid'?<ArrowUpRight className="size-3"/>:<ArrowDownLeft className="size-3"/>}{row[3]}</span></td></tr>)}</tbody></table></section></div>
+    <div className="simulation-note"><Radio className="size-3.5 shrink-0 text-analysis"/><span>Simulation mode. No live exchange feed or historical depth connected. All prices, trades and liquidity values are illustrative.</span><Button variant="ghost" className="h-5 w-5 p-0 shrink-0" title="Data methodology" onClick={()=>setDetails(s=>!s)}><CircleHelp className="size-3"/></Button></div>
+    {notice&&<div role="status" className="mt-3 flex items-center justify-between border border-border bg-secondary p-3 rounded text-xs"><span>{notice}</span><Button variant="ghost" size="sm" onClick={()=>setNotice('')}>Dismiss</Button></div>}
+   </main>
+  </div>
+ </div>;
 }
