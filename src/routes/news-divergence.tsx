@@ -1,0 +1,5 @@
+import { createFileRoute } from '@tanstack/react-router';
+import { TerminalShell } from '@/components/platform/terminal-shell';
+import { PageHeader, EmptyState } from '@/components/platform/research-ui';
+export const Route=createFileRoute('/news-divergence')({head:()=>({meta:[{title:'News vs flow — Fz Market Intelligence'},{name:'description',content:'Compare news sentiment with observed flows.'},{property:'og:title',content:'News vs flow — Fz Market Intelligence'},{property:'og:description',content:'Compare news sentiment with observed flows.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}]}),component:Page});
+function Page(){return <TerminalShell><main className="research-content"><PageHeader eyebrow="Fz Market Intelligence" title="News vs flow" description="Compare news sentiment with observed flows."/><EmptyState title="Divergence analysis unavailable" description="Requires a connected news provider and recorded ETF flow observations. No divergence is inferred from simulated data."/></main></TerminalShell>;}

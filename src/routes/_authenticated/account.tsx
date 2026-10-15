@@ -1,0 +1,5 @@
+import { createFileRoute } from '@tanstack/react-router';
+import { TerminalShell } from '@/components/platform/terminal-shell';
+import { PageHeader, EmptyState } from '@/components/platform/research-ui';
+export const Route=createFileRoute('/_authenticated/account')({head:()=>({meta:[{title:'Subscription & account — Fz Market Intelligence'},{name:'description',content:'Profile, plan and preferences.'},{property:'og:title',content:'Subscription & account — Fz Market Intelligence'},{property:'og:description',content:'Profile, plan and preferences.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}]}),component:Page});
+function Page(){return <TerminalShell><main className="research-content"><PageHeader eyebrow="Fz Market Intelligence" title="Subscription & account" description="Profile, plan and preferences."/><EmptyState title="Billing not configured" description="Proposed plans are shown for reference only; no payment is taken until billing is configured."/></main></TerminalShell>;}

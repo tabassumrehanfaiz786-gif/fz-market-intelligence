@@ -10,33 +10,277 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AggregateFlowsRouteImport } from './routes/aggregate-flows'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ComparisonRouteImport } from './routes/comparison'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as DevelopersRouteImport } from './routes/developers'
+import { Route as EtfFlowsRouteImport } from './routes/etf-flows'
+import { Route as HiddenLiquidityRouteImport } from './routes/hidden-liquidity'
+import { Route as IcebergsRouteImport } from './routes/icebergs'
+import { Route as MethodologyRouteImport } from './routes/methodology'
+import { Route as NewsRouteImport } from './routes/news'
+import { Route as NewsDivergenceRouteImport } from './routes/news-divergence'
+import { Route as PerpetualRouteImport } from './routes/perpetual'
+import { Route as ReplayRouteImport } from './routes/replay'
+import { Route as SpotRouteImport } from './routes/spot'
+import { Route as SurveillanceRouteImport } from './routes/surveillance'
+import { Route as SystemHealthRouteImport } from './routes/system-health'
+import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
+import { Route as AuthenticatedCasesRouteImport } from './routes/_authenticated/cases'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AggregateFlowsRoute = AggregateFlowsRouteImport.update({
+  id: '/aggregate-flows',
+  path: '/aggregate-flows',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComparisonRoute = ComparisonRouteImport.update({
+  id: '/comparison',
+  path: '/comparison',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevelopersRoute = DevelopersRouteImport.update({
+  id: '/developers',
+  path: '/developers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EtfFlowsRoute = EtfFlowsRouteImport.update({
+  id: '/etf-flows',
+  path: '/etf-flows',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HiddenLiquidityRoute = HiddenLiquidityRouteImport.update({
+  id: '/hidden-liquidity',
+  path: '/hidden-liquidity',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IcebergsRoute = IcebergsRouteImport.update({
+  id: '/icebergs',
+  path: '/icebergs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MethodologyRoute = MethodologyRouteImport.update({
+  id: '/methodology',
+  path: '/methodology',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsRoute = NewsRouteImport.update({
+  id: '/news',
+  path: '/news',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsDivergenceRoute = NewsDivergenceRouteImport.update({
+  id: '/news-divergence',
+  path: '/news-divergence',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PerpetualRoute = PerpetualRouteImport.update({
+  id: '/perpetual',
+  path: '/perpetual',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReplayRoute = ReplayRouteImport.update({
+  id: '/replay',
+  path: '/replay',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpotRoute = SpotRouteImport.update({
+  id: '/spot',
+  path: '/spot',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SurveillanceRoute = SurveillanceRouteImport.update({
+  id: '/surveillance',
+  path: '/surveillance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SystemHealthRoute = SystemHealthRouteImport.update({
+  id: '/system-health',
+  path: '/system-health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCasesRoute = AuthenticatedCasesRouteImport.update({
+  id: '/cases',
+  path: '/cases',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/aggregate-flows': typeof AggregateFlowsRoute
+  '/auth': typeof AuthRoute
+  '/comparison': typeof ComparisonRoute
+  '/dashboard': typeof DashboardRoute
+  '/developers': typeof DevelopersRoute
+  '/etf-flows': typeof EtfFlowsRoute
+  '/hidden-liquidity': typeof HiddenLiquidityRoute
+  '/icebergs': typeof IcebergsRoute
+  '/methodology': typeof MethodologyRoute
+  '/news': typeof NewsRoute
+  '/news-divergence': typeof NewsDivergenceRoute
+  '/perpetual': typeof PerpetualRoute
+  '/replay': typeof ReplayRoute
+  '/spot': typeof SpotRoute
+  '/surveillance': typeof SurveillanceRoute
+  '/system-health': typeof SystemHealthRoute
+  '/account': typeof AuthenticatedAccountRoute
+  '/cases': typeof AuthenticatedCasesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/aggregate-flows': typeof AggregateFlowsRoute
+  '/auth': typeof AuthRoute
+  '/comparison': typeof ComparisonRoute
+  '/dashboard': typeof DashboardRoute
+  '/developers': typeof DevelopersRoute
+  '/etf-flows': typeof EtfFlowsRoute
+  '/hidden-liquidity': typeof HiddenLiquidityRoute
+  '/icebergs': typeof IcebergsRoute
+  '/methodology': typeof MethodologyRoute
+  '/news': typeof NewsRoute
+  '/news-divergence': typeof NewsDivergenceRoute
+  '/perpetual': typeof PerpetualRoute
+  '/replay': typeof ReplayRoute
+  '/spot': typeof SpotRoute
+  '/surveillance': typeof SurveillanceRoute
+  '/system-health': typeof SystemHealthRoute
+  '/account': typeof AuthenticatedAccountRoute
+  '/cases': typeof AuthenticatedCasesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/aggregate-flows': typeof AggregateFlowsRoute
+  '/auth': typeof AuthRoute
+  '/comparison': typeof ComparisonRoute
+  '/dashboard': typeof DashboardRoute
+  '/developers': typeof DevelopersRoute
+  '/etf-flows': typeof EtfFlowsRoute
+  '/hidden-liquidity': typeof HiddenLiquidityRoute
+  '/icebergs': typeof IcebergsRoute
+  '/methodology': typeof MethodologyRoute
+  '/news': typeof NewsRoute
+  '/news-divergence': typeof NewsDivergenceRoute
+  '/perpetual': typeof PerpetualRoute
+  '/replay': typeof ReplayRoute
+  '/spot': typeof SpotRoute
+  '/surveillance': typeof SurveillanceRoute
+  '/system-health': typeof SystemHealthRoute
+  '/_authenticated/account': typeof AuthenticatedAccountRoute
+  '/_authenticated/cases': typeof AuthenticatedCasesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/aggregate-flows'
+    | '/auth'
+    | '/comparison'
+    | '/dashboard'
+    | '/developers'
+    | '/etf-flows'
+    | '/hidden-liquidity'
+    | '/icebergs'
+    | '/methodology'
+    | '/news'
+    | '/news-divergence'
+    | '/perpetual'
+    | '/replay'
+    | '/spot'
+    | '/surveillance'
+    | '/system-health'
+    | '/account'
+    | '/cases'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/aggregate-flows'
+    | '/auth'
+    | '/comparison'
+    | '/dashboard'
+    | '/developers'
+    | '/etf-flows'
+    | '/hidden-liquidity'
+    | '/icebergs'
+    | '/methodology'
+    | '/news'
+    | '/news-divergence'
+    | '/perpetual'
+    | '/replay'
+    | '/spot'
+    | '/surveillance'
+    | '/system-health'
+    | '/account'
+    | '/cases'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/aggregate-flows'
+    | '/auth'
+    | '/comparison'
+    | '/dashboard'
+    | '/developers'
+    | '/etf-flows'
+    | '/hidden-liquidity'
+    | '/icebergs'
+    | '/methodology'
+    | '/news'
+    | '/news-divergence'
+    | '/perpetual'
+    | '/replay'
+    | '/spot'
+    | '/surveillance'
+    | '/system-health'
+    | '/_authenticated/account'
+    | '/_authenticated/cases'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AggregateFlowsRoute: typeof AggregateFlowsRoute
+  AuthRoute: typeof AuthRoute
+  ComparisonRoute: typeof ComparisonRoute
+  DashboardRoute: typeof DashboardRoute
+  DevelopersRoute: typeof DevelopersRoute
+  EtfFlowsRoute: typeof EtfFlowsRoute
+  HiddenLiquidityRoute: typeof HiddenLiquidityRoute
+  IcebergsRoute: typeof IcebergsRoute
+  MethodologyRoute: typeof MethodologyRoute
+  NewsRoute: typeof NewsRoute
+  NewsDivergenceRoute: typeof NewsDivergenceRoute
+  PerpetualRoute: typeof PerpetualRoute
+  ReplayRoute: typeof ReplayRoute
+  SpotRoute: typeof SpotRoute
+  SurveillanceRoute: typeof SurveillanceRoute
+  SystemHealthRoute: typeof SystemHealthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +292,174 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aggregate-flows': {
+      id: '/aggregate-flows'
+      path: '/aggregate-flows'
+      fullPath: '/aggregate-flows'
+      preLoaderRoute: typeof AggregateFlowsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/comparison': {
+      id: '/comparison'
+      path: '/comparison'
+      fullPath: '/comparison'
+      preLoaderRoute: typeof ComparisonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/developers': {
+      id: '/developers'
+      path: '/developers'
+      fullPath: '/developers'
+      preLoaderRoute: typeof DevelopersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/etf-flows': {
+      id: '/etf-flows'
+      path: '/etf-flows'
+      fullPath: '/etf-flows'
+      preLoaderRoute: typeof EtfFlowsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hidden-liquidity': {
+      id: '/hidden-liquidity'
+      path: '/hidden-liquidity'
+      fullPath: '/hidden-liquidity'
+      preLoaderRoute: typeof HiddenLiquidityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/icebergs': {
+      id: '/icebergs'
+      path: '/icebergs'
+      fullPath: '/icebergs'
+      preLoaderRoute: typeof IcebergsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/methodology': {
+      id: '/methodology'
+      path: '/methodology'
+      fullPath: '/methodology'
+      preLoaderRoute: typeof MethodologyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/news': {
+      id: '/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof NewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/news-divergence': {
+      id: '/news-divergence'
+      path: '/news-divergence'
+      fullPath: '/news-divergence'
+      preLoaderRoute: typeof NewsDivergenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/perpetual': {
+      id: '/perpetual'
+      path: '/perpetual'
+      fullPath: '/perpetual'
+      preLoaderRoute: typeof PerpetualRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/replay': {
+      id: '/replay'
+      path: '/replay'
+      fullPath: '/replay'
+      preLoaderRoute: typeof ReplayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/spot': {
+      id: '/spot'
+      path: '/spot'
+      fullPath: '/spot'
+      preLoaderRoute: typeof SpotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/surveillance': {
+      id: '/surveillance'
+      path: '/surveillance'
+      fullPath: '/surveillance'
+      preLoaderRoute: typeof SurveillanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/system-health': {
+      id: '/system-health'
+      path: '/system-health'
+      fullPath: '/system-health'
+      preLoaderRoute: typeof SystemHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/account': {
+      id: '/_authenticated/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AuthenticatedAccountRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cases': {
+      id: '/_authenticated/cases'
+      path: '/cases'
+      fullPath: '/cases'
+      preLoaderRoute: typeof AuthenticatedCasesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
+  AuthenticatedCasesRoute: typeof AuthenticatedCasesRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAccountRoute: AuthenticatedAccountRoute,
+  AuthenticatedCasesRoute: AuthenticatedCasesRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AggregateFlowsRoute: AggregateFlowsRoute,
+  AuthRoute: AuthRoute,
+  ComparisonRoute: ComparisonRoute,
+  DashboardRoute: DashboardRoute,
+  DevelopersRoute: DevelopersRoute,
+  EtfFlowsRoute: EtfFlowsRoute,
+  HiddenLiquidityRoute: HiddenLiquidityRoute,
+  IcebergsRoute: IcebergsRoute,
+  MethodologyRoute: MethodologyRoute,
+  NewsRoute: NewsRoute,
+  NewsDivergenceRoute: NewsDivergenceRoute,
+  PerpetualRoute: PerpetualRoute,
+  ReplayRoute: ReplayRoute,
+  SpotRoute: SpotRoute,
+  SurveillanceRoute: SurveillanceRoute,
+  SystemHealthRoute: SystemHealthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,0 +1,5 @@
+import { createFileRoute } from '@tanstack/react-router';
+import { TerminalShell } from '@/components/platform/terminal-shell';
+import { PageHeader, EmptyState } from '@/components/platform/research-ui';
+export const Route=createFileRoute('/surveillance')({head:()=>({meta:[{title:'Regulatory surveillance — Fz Market Intelligence'},{name:'description',content:'Market surveillance workbench.'},{property:'og:title',content:'Regulatory surveillance — Fz Market Intelligence'},{property:'og:description',content:'Market surveillance workbench.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}]}),component:Page});
+function Page(){return <TerminalShell><main className="research-content"><PageHeader eyebrow="Fz Market Intelligence" title="Regulatory surveillance" description="Market surveillance workbench."/><EmptyState title="No surveillance alerts" description="Surveillance rules run only on recorded observations. Anomalies are candidates for review and never prove ownership or intent."/></main></TerminalShell>;}

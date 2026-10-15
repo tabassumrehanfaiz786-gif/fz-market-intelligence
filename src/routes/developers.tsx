@@ -1,0 +1,5 @@
+import { createFileRoute } from '@tanstack/react-router';
+import { TerminalShell } from '@/components/platform/terminal-shell';
+import { PageHeader, EmptyState } from '@/components/platform/research-ui';
+export const Route=createFileRoute('/developers')({head:()=>({meta:[{title:'Developer portal — Fz Market Intelligence'},{name:'description',content:'API catalogue for Fz Market Intelligence.'},{property:'og:title',content:'Developer portal — Fz Market Intelligence'},{property:'og:description',content:'API catalogue for Fz Market Intelligence.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}]}),component:Page});
+function Page(){return <TerminalShell><main className="research-content"><PageHeader eyebrow="Fz Market Intelligence" title="Developer portal" description="API catalogue for Fz Market Intelligence."/><EmptyState title="API not yet activated" description="The customer API will be activated once licensed functional data and production entitlements are configured."/></main></TerminalShell>;}
