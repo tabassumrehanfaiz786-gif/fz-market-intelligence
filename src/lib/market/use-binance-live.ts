@@ -44,8 +44,8 @@ export function useBinanceLive(market: string): LiveState {
           tradesRef.current = [t, ...tradesRef.current].slice(0, 40);
           setState((s) => ({ ...s, status: 'live', price: t.price, trades: tradesRef.current, lastUpdate: now }));
         } else if (stream.includes('@depth')) {
-          const bids = (data.bids ?? data.b ?? []).map((l: string[]) => [+l[0], +l[1]] as LiveLevel);
-          const asks = (data.asks ?? data.a ?? []).map((l: string[]) => [+l[0], +l[1]] as LiveLevel);
+          const bids = (data.bids ?? data.b ?? []).map((l: string[]) => [+l[0]!, +l[1]!] as LiveLevel);
+          const asks = (data.asks ?? data.a ?? []).map((l: string[]) => [+l[0]!, +l[1]!] as LiveLevel);
           setState((s) => ({ ...s, status: 'live', bids, asks, lastUpdate: now }));
         }
       };
