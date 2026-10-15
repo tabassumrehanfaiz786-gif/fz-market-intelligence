@@ -14,3 +14,4 @@
 - Use a shared terminal shell with separate file-based routes for research modules; this keeps navigation consistent without crowding the dashboard.
 - Keep reproducible research fixtures and pure calculations separate from real Cloud observation tables; this prevents demo evidence contaminating recorded market data.
 - Use authenticated server functions and owner-scoped RLS for personal case files and separate protected role rows for privileges; this enforces data isolation independently of UI visibility.
+- Live Binance market data streams browser-side via src/lib/market/use-binance-live.ts with LIVE/STALE/DISCONNECTED badges; simulated panels keep SIMULATED labels so live and sample data never mix.
