@@ -1,0 +1,5 @@
+import { createFileRoute } from '@tanstack/react-router';
+import { TerminalShell } from '@/components/platform/terminal-shell';
+import { PageHeader, EmptyState } from '@/components/platform/research-ui';
+export const Route=createFileRoute('/methodology')({head:()=>({meta:[{title:'Sources & methodology — Fz Market Intelligence'},{name:'description',content:'Data sources, definitions and limitations.'},{property:'og:title',content:'Sources & methodology — Fz Market Intelligence'},{property:'og:description',content:'Data sources, definitions and limitations.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}]}),component:Page});
+function Page(){return <TerminalShell><main className="research-content"><PageHeader eyebrow="Fz Market Intelligence" title="Sources & methodology" description="Data sources, definitions and limitations."/><EmptyState title="Methodology" description="All current values come from deterministic research fixtures (FZ-DEMO-1). ETF, exchange depth and news providers are not connected. Candidate signals are rule-based and uncalibrated; alternative explanations are always listed."/></main></TerminalShell>;}

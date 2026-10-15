@@ -1,0 +1,5 @@
+import { createFileRoute } from '@tanstack/react-router';
+import { TerminalShell } from '@/components/platform/terminal-shell';
+import { PageHeader, EmptyState } from '@/components/platform/research-ui';
+export const Route=createFileRoute('/news')({head:()=>({meta:[{title:'Institutional news — Fz Market Intelligence'},{name:'description',content:'Institutional crypto news feed.'},{property:'og:title',content:'Institutional news — Fz Market Intelligence'},{property:'og:description',content:'Institutional crypto news feed.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}]}),component:Page});
+function Page(){return <TerminalShell><main className="research-content"><PageHeader eyebrow="Fz Market Intelligence" title="Institutional news" description="Institutional crypto news feed."/><EmptyState title="No news provider connected" description="Licensed institutional news sources have not been connected. Headlines will appear here with source, timestamp and provenance once configured."/></main></TerminalShell>;}

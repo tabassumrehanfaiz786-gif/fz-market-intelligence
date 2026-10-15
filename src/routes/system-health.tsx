@@ -1,0 +1,5 @@
+import { createFileRoute } from '@tanstack/react-router';
+import { TerminalShell } from '@/components/platform/terminal-shell';
+import { PageHeader, EmptyState } from '@/components/platform/research-ui';
+export const Route=createFileRoute('/system-health')({head:()=>({meta:[{title:'System health — Fz Market Intelligence'},{name:'description',content:'Data pipeline status.'},{property:'og:title',content:'System health — Fz Market Intelligence'},{property:'og:description',content:'Data pipeline status.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}]}),component:Page});
+function Page(){return <TerminalShell><main className="research-content"><PageHeader eyebrow="Fz Market Intelligence" title="System health" description="Data pipeline status."/><EmptyState title="Feeds disconnected" description="ETF: not connected · Exchange depth: not connected · News: not connected. Research fixtures are serving simulated data."/></main></TerminalShell>;}

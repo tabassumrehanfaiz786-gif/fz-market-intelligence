@@ -1,0 +1,5 @@
+import { createFileRoute } from '@tanstack/react-router';
+import { TerminalShell } from '@/components/platform/terminal-shell';
+import { PageHeader, EmptyState } from '@/components/platform/research-ui';
+export const Route=createFileRoute('/_authenticated/cases')({head:()=>({meta:[{title:'Evidence & cases — Fz Market Intelligence'},{name:'description',content:'Your private evidence case files.'},{property:'og:title',content:'Evidence & cases — Fz Market Intelligence'},{property:'og:description',content:'Your private evidence case files.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'}]}),component:Page});
+function Page(){return <TerminalShell><main className="research-content"><PageHeader eyebrow="Fz Market Intelligence" title="Evidence & cases" description="Your private evidence case files."/><EmptyState title="No cases yet" description="Create a case from any analysis page. Cases are private to your account and include provenance and limitations."/></main></TerminalShell>;}
