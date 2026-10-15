@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 import { Activity, ArrowDownLeft, ArrowUpRight, Bell, Bitcoin, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Download, Expand, Layers, Menu, Pause, Play, Radio, Settings2, ShieldCheck, SlidersHorizontal, Waves, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { LiveFeedPanel } from '@/components/market/live-feed-panel';
 import { LiquidityHeatmap, timeframes, type Timeframe } from '@/components/market/liquidity-heatmap';
 
 export const Route = createFileRoute('/')({
@@ -39,7 +40,8 @@ function Index(){
    <header className="topbar"><div className="flex min-w-0 items-center gap-3"><Button variant="ghost" size="icon" className="hidden sm:inline-flex text-muted-foreground" title="Toggle sidebar" onClick={()=>setCollapsed(s=>!s)}><Menu/></Button><span className="text-xs text-muted-foreground hidden sm:inline">Workspace</span><ChevronRight className="size-3 text-muted-foreground hidden sm:inline"/><span className="text-xs hidden sm:inline">Market liquidity</span><div className="flex items-center gap-2 sm:hidden"><span className="text-primary font-semibold text-xl">Fz</span><span className="text-[11px] font-medium">Market Intelligence</span></div></div><div className="flex items-center gap-4 shrink-0"><span className="flex items-center gap-2 text-[10px] text-analysis"><span className="status-dot"/>SIMULATION</span><Button variant="ghost" size="icon" title="Feed notifications" className="text-muted-foreground hidden sm:inline-flex" onClick={()=>setNotice('Market feed is disconnected. All visible chart values are simulated.')}><Bell/></Button><span className="size-7 border border-border rounded-full grid place-items-center text-[10px] bg-secondary">FZ</span></div></header>
    <main className="content">
     <div className="market-heading"><div className="min-w-0"><div className="eyebrow">Market intelligence / Liquidity</div><h1>Market liquidity</h1><p className="text-xs text-muted-foreground">Order-book depth, executed trades & liquidity concentration.</p></div><Button variant="outline" size="sm" onClick={exportData} title="Export simulation metadata"><Download/><span className="hidden sm:inline">Export</span></Button></div>
-    <div className="market-stats">
+    <LiveFeedPanel market={market}/>
+     <div className="market-stats">
      <div className="market-stat"><div className="stat-label"><Bitcoin className="size-3 text-primary"/>BTC / USDT <span className="ml-auto text-analysis">SIM</span></div><div className="stat-value">86,642.50 <span className="text-[10px] text-muted-foreground">USDT</span></div><div className="stat-foot text-positive">+1.24% <span className="text-muted-foreground">· simulated change</span></div></div>
      <div className="market-stat"><div className="stat-label">Displayed liquidity</div><div className="stat-value">1,284.6 <span className="text-[10px] text-muted-foreground">BTC</span></div><div className="stat-foot">Simulated resting depth</div></div>
      <div className="market-stat"><div className="stat-label">Bid / ask imbalance</div><div className="stat-value text-positive">+18.42<span className="text-sm">%</span></div><div className="stat-foot">Simulated buy-side bias</div></div>
