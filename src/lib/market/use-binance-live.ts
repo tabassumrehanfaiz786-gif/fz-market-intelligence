@@ -24,16 +24,18 @@ export function useBinanceLive(market: string): LiveState {
   const tradesRef = useRef<LiveTrade[]>([]);
   useEffect(() => {
     const perp = market === 'Perpetual';
-    const base = perp ? 'wss://fstream.binance.com/stream' : 'wss://stream.binance.com:9443/stream';
-    const depth = perp ? 'btcusdt@depth20@500ms' : 'btcusdt@depth20@1000ms';
-    const url = `${base}?streams=btcusdt@ticker/btcusdt@aggTrade/${depth}`;
-    let ws: WebSocket | null = null;
+    // Binance futures splits streams: /market (trades, ticker) and /public (depth).
+    const urls = perp
+      ? ['wss://fstream.binance.com/market/stream?streams=btcusdt@ticker/btcusdt@aggTrade', 'wss://fstream.binance.com/public/stream?streams=btcusdt@depth20@500ms']
+      : ['wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/btcusdt@aggTrade/btcusdt@depth20@1000ms'];
+    const sockets: WebSocket[] = [];
     let retry: ReturnType<typeof setTimeout> | undefined;
     let closed = false;
     tradesRef.current = [];
     setState(empty);
-    const connect = () => {
-      ws = new WebSocket(url);
+    const connect = (url: string) => {
+      const ws = new WebSocket(url);
+      sockets.push(ws);
       ws.onmessage = (ev) => {
         const { stream, data } = JSON.parse(ev.data);
         const now = Date.now();
@@ -52,13 +54,13 @@ export function useBinanceLive(market: string): LiveState {
       ws.onclose = () => {
         if (closed) return;
         setState((s) => ({ ...s, status: 'disconnected' }));
-        retry = setTimeout(connect, 3000);
+        retry = setTimeout(() => connect(url), 3000);
       };
-      ws.onerror = () => ws?.close();
+      ws.onerror = () => ws.close();
     };
-    connect();
+    urls.forEach(connect);
     const staleTimer = setInterval(() => setState((s) => (s.status === 'live' && s.lastUpdate && Date.now() - s.lastUpdate > 10000 ? { ...s, status: 'stale' } : s)), 2000);
-    return () => { closed = true; clearTimeout(retry); clearInterval(staleTimer); ws?.close(); };
+    return () => { closed = true; clearTimeout(retry); clearInterval(staleTimer); sockets.forEach((w) => w.close()); };
   }, [market]);
   return state;
 }
