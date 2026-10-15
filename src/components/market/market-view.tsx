@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Activity, ArrowDownLeft, ArrowUpRight, Bitcoin, CircleHelp, Download, Expand, Layers, Pause, Play, Radio, Settings2, SlidersHorizontal, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { LiveFeedPanel } from '@/components/market/live-feed-panel';
 import { LiquidityHeatmap, timeframes, type Timeframe } from '@/components/market/liquidity-heatmap';
 export function MarketView({initialMarket="Spot"}:{initialMarket?:string}){
  const [timeframe,setTimeframe]=useState<Timeframe>('4h');
@@ -18,7 +19,8 @@ export function MarketView({initialMarket="Spot"}:{initialMarket?:string}){
  return (
    <main className="content">
     <div className="market-heading"><div className="min-w-0"><div className="eyebrow">Market intelligence / Liquidity</div><h1>Market liquidity</h1><p className="text-xs text-muted-foreground">Order-book depth, executed trades & liquidity concentration.</p></div><Button variant="outline" size="sm" onClick={exportData} title="Export simulation metadata"><Download/><span className="hidden sm:inline">Export</span></Button></div>
-    <div className="market-stats">
+    <LiveFeedPanel market={market}/>
+     <div className="market-stats">
      <div className="market-stat"><div className="stat-label"><Bitcoin className="size-3 text-primary"/>BTC / USDT <span className="ml-auto text-analysis">SIM</span></div><div className="stat-value">86,642.50 <span className="text-[10px] text-muted-foreground">USDT</span></div><div className="stat-foot text-positive">+1.24% <span className="text-muted-foreground">· simulated change</span></div></div>
      <div className="market-stat"><div className="stat-label">Displayed liquidity</div><div className="stat-value">1,284.6 <span className="text-[10px] text-muted-foreground">BTC</span></div><div className="stat-foot">Simulated resting depth</div></div>
      <div className="market-stat"><div className="stat-label">Bid / ask imbalance</div><div className="stat-value text-positive">+18.42<span className="text-sm">%</span></div><div className="stat-foot">Simulated buy-side bias</div></div>
