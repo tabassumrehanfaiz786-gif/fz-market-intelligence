@@ -1,9 +1,31 @@
-import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
-import { Download, ArrowUpRight, Search } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { PageHeader,DataBadge,Metric,FlowChart,Provenance,MethodNote,EmptyState,SectionHeading } from './research-ui';
-import { funds,dailyFlows,fixtureTimestamp,fixtureSource } from '@/lib/research/fixtures';
-import { aggregateFlows,cumulativeFlows,usdMillions,btcEquivalent } from '@/lib/research/calculations';
-import { downloadCsv } from '@/lib/research/report';
-export function FlowAnalytics({aggregate=false}:{aggregate?:boolean}){const [demo,setDemo]=useState(true),[query,setQuery]=useState(''),[issuer,setIssuer]=useState('All issuers'),[selected,setSelected]=useState<string|null>(null),[period,setPeriod]=useState('Daily'),[view,setView]=useState('Net flow');const filtered=funds.filter(f=>(issuer==='All issuers'||f.issuer===issuer)&&`${f.ticker} ${f.name}`.toLowerCase().includes(query.toLowerCase()));const total=aggregateFlows(filtered.map(f=>f.net));const selectedFund=funds.find(f=>f.ticker===selected);const chartValues=view==='Cumulative'?cumulativeFlows(dailyFlows.map(d=>d.flow)):dailyFlows.map(d=>d.flow);const values=period==='Daily'?chartValues:[aggregateFlows(dailyFlows.map(d=>d.flow))];return <main className="research-content"><PageHeader eyebrow="Institutional flows / Bitcoin spot ETFs" title={aggregate?'Aggregate ETF analytics':'Institutional ETF flow monitor'} description={aggregate?'Fund contributions, cumulative net flows and price-aligned reporting.':'Fund-level net flows and coverage. Demonstration ranking is synthetic, not a verified AUM league table.'} actions={<Button variant="outline" size="sm" onClick={()=>downloadCsv('fz-simulated-etf-flows.csv',[['status','ticker','issuer','net_flow_usd_millions','aum_usd_millions','reporting_date','source'],...filtered.map(f=>['SIMULATED',f.ticker,f.issuer,f.net,f.aum,'2026-01-09',fixtureSource])])}><Download/><span className="hidden sm:inline">Export</span></Button>}/><div className="research-filterbar"><div className="flex gap-2 flex-wrap"><Button variant="terminal" size="sm" data-active={demo} onClick={()=>setDemo(true)}>Demonstration</Button><Button variant="terminal" size="sm" data-active={!demo} onClick={()=>setDemo(false)}>Verified observations</Button></div><span className="text-[10px] text-muted-foreground">Coverage: 05–09 Jan 2026 · fixture only</span></div>{!demo?<EmptyState title="ETF reporting source not connected" description="No verified fund flows or AUM ranking are available. A licensed, dated reporting source is required before real analytics can be shown."/>:<><div className="research-metrics"><Metric label="Daily net flow" value={usdMillions(total)} foot="Selected synthetic funds · 09 Jan" tone={total>=0?'text-positive':'text-negative'}/><Metric label="5-session net flow" value={usdMillions(aggregateFlows(dailyFlows.map(d=>d.flow)))} foot="5 observations · no missing fixture days" tone="text-positive"/><Metric label="BTC equivalent" value={(btcEquivalent(total*1e6,86642.5)??0).toFixed(2)} unit="BTC" foot="Net USD / fixture BTC price"/><Metric label="Fund coverage" value={`${filtered.length} / 10`} foot="Synthetic set · not live top-10 AUM"/></div>{aggregate&&<section className="research-section"><div className="research-filterbar"><SectionHeading title="Net flow time series"/><div className="flex gap-2"><select className="market-select" aria-label="Flow aggregation" value={period} onChange={e=>setPeriod(e.target.value)}><option>Daily</option><option>Weekly</option><option>Monthly</option></select>{['Net flow','Cumulative'].map(v=><Button key={v} variant="terminal" size="sm" data-active={view===v} onClick={()=>setView(v)}>{v}</Button>)}</div></div><FlowChart values={values} labels={period==='Daily'?dailyFlows.map(d=>d.date.slice(5)):[period==='Weekly'?'Week 02':'Jan 2026']} cumulative={view==='Cumulative'}/><Provenance/></section>}<div className="research-filterbar mt-6"><input className="fz-input" placeholder="Search fund or ticker…" aria-label="Search ETF funds" value={query} onChange={e=>setQuery(e.target.value)}/><select className="market-select" aria-label="Filter issuer" value={issuer} onChange={e=>setIssuer(e.target.value)}><option>All issuers</option>{Array.from(new Set(funds.map(f=>f.issuer))).map(i=><option key={i}>{i}</option>)}</select></div><div className="research-table-wrap"><table className="research-table"><thead><tr><th>Fund / issuer</th><th>Fixture AUM ($M)</th><th>Daily net ($M)</th><th>7 / 30 / 90-day</th><th>Source & reporting date</th><th/></tr></thead><tbody>{filtered.map(f=><tr key={f.ticker}><td><span className="font-semibold">{f.ticker}</span><div className="mt-1 text-[10px] text-muted-foreground">{f.issuer}</div></td><td className="numeric">{f.aum.toLocaleString()}</td><td className={`numeric ${f.net>=0?'text-positive':'text-negative'}`}>{usdMillions(f.net)}</td><td className="text-muted-foreground">Unavailable · insufficient coverage</td><td><DataBadge/><div className="mt-1 text-[9px] text-muted-foreground">09 Jan 2026 · FZ-DEMO-1</div></td><td><Button variant="ghost" size="icon" title={`Inspect ${f.ticker}`} onClick={()=>setSelected(f.ticker)}><ArrowUpRight/></Button></td></tr>)}</tbody></table>{filtered.length===0&&<div className="p-6 text-center text-muted-foreground text-xs">No matching fund fixtures.</div>}</div><Provenance/>{selectedFund&&<div className="research-section mt-5"><div className="research-filterbar"><h2 className="text-sm font-semibold">{selectedFund.name} · {selectedFund.ticker}</h2><Button variant="ghost" size="sm" onClick={()=>setSelected(null)}>Close</Button></div><p className="text-xs text-muted-foreground leading-6">Synthetic daily net flow: {usdMillions(selectedFund.net)}. Reporting date: 09 Jan 2026. Fixture timestamp: {fixtureTimestamp}. Gross inflows and outflows are unavailable and cannot be inferred from this net value. AUM values are fictional fixtures, not a verified current ranking.</p></div>}<MethodNote>Net flow = the sum of selected fund-level observations. ETF flows are not exchange deposits, on-chain transfers or beneficial investor ownership. Longer periods require actual reporting coverage; unavailable days are not treated as zero.</MethodNote></>}</main>;}
+import { PageHeader, DataBadge, EmptyState } from './research-ui';
+import { providers } from '@/lib/research/fixtures';
+
+export function FlowAnalytics({ aggregate = false }: { aggregate?: boolean }) {
+  return (
+    <main className="research-content">
+      <PageHeader
+        eyebrow="Institutional flows / Bitcoin spot ETFs"
+        title={aggregate ? 'Aggregate ETF analytics' : 'Institutional ETF flow monitor'}
+        description="Fund-level net flows and coverage. No simulated data is shown on this page."
+      />
+      <EmptyState
+        title="ETF reporting source not connected"
+        description="Live ETF flow data requires a licensed, dated fund-reporting source, which is not connected. No verified fund flows, AUM ranking or aggregate analytics are available, and no simulated figures are displayed."
+      >
+        <Button variant="link" size="sm" asChild><Link to="/methodology">Sources & methodology<ArrowRight /></Link></Button>
+      </EmptyState>
+      <section className="research-section mt-6">
+        {providers.filter((p) => p.name.includes('ETF')).map((p) => (
+          <div className="provider-item" key={p.name}>
+            <div><h3>{p.name}</h3><p>{p.required}</p></div>
+            <DataBadge status="UNAVAILABLE" />
+          </div>
+        ))}
+      </section>
+    </main>
+  );
+}

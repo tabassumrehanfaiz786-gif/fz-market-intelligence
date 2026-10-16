@@ -47,7 +47,7 @@ export function LiveFeedPanel({ market }: { market: string }) {
           </div>
         </div>
       </div>
-      <p className="text-[10px] text-muted-foreground mt-3">Live: public Binance market stream, single venue, not recorded. The heatmap, delta and liquidity-level panels below remain <span className="text-analysis">SIMULATED</span>. Funding, open interest and historical depth are unavailable.</p>
+      <p className="text-[10px] text-muted-foreground mt-3">Live: public Binance market stream, single venue, not recorded. The heatmap, delta and liquidity-level panels below use the same live feed. Funding, open interest and historical depth are unavailable.</p>
     </section>
   );
 }
