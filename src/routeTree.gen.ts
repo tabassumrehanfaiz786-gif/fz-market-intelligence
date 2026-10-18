@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AggregateFlowsRouteImport } from './routes/aggregate-flows'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ComparisonRouteImport } from './routes/comparison'
+import { Route as CrossVenueRouteImport } from './routes/cross-venue'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DevelopersRouteImport } from './routes/developers'
 import { Route as EtfFlowsRouteImport } from './routes/etf-flows'
@@ -22,8 +23,10 @@ import { Route as IcebergsRouteImport } from './routes/icebergs'
 import { Route as MethodologyRouteImport } from './routes/methodology'
 import { Route as NewsRouteImport } from './routes/news'
 import { Route as NewsDivergenceRouteImport } from './routes/news-divergence'
+import { Route as OrderFlowRouteImport } from './routes/order-flow'
 import { Route as PerpetualRouteImport } from './routes/perpetual'
 import { Route as ReplayRouteImport } from './routes/replay'
+import { Route as SpoofingRouteImport } from './routes/spoofing'
 import { Route as SpotRouteImport } from './routes/spot'
 import { Route as SurveillanceRouteImport } from './routes/surveillance'
 import { Route as SystemHealthRouteImport } from './routes/system-health'
@@ -52,6 +55,11 @@ const AuthRoute = AuthRouteImport.update({
 const ComparisonRoute = ComparisonRouteImport.update({
   id: '/comparison',
   path: '/comparison',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrossVenueRoute = CrossVenueRouteImport.update({
+  id: '/cross-venue',
+  path: '/cross-venue',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -94,6 +102,11 @@ const NewsDivergenceRoute = NewsDivergenceRouteImport.update({
   path: '/news-divergence',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrderFlowRoute = OrderFlowRouteImport.update({
+  id: '/order-flow',
+  path: '/order-flow',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PerpetualRoute = PerpetualRouteImport.update({
   id: '/perpetual',
   path: '/perpetual',
@@ -102,6 +115,11 @@ const PerpetualRoute = PerpetualRouteImport.update({
 const ReplayRoute = ReplayRouteImport.update({
   id: '/replay',
   path: '/replay',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpoofingRoute = SpoofingRouteImport.update({
+  id: '/spoofing',
+  path: '/spoofing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SpotRoute = SpotRouteImport.update({
@@ -135,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/aggregate-flows': typeof AggregateFlowsRoute
   '/auth': typeof AuthRoute
   '/comparison': typeof ComparisonRoute
+  '/cross-venue': typeof CrossVenueRoute
   '/dashboard': typeof DashboardRoute
   '/developers': typeof DevelopersRoute
   '/etf-flows': typeof EtfFlowsRoute
@@ -143,8 +162,10 @@ export interface FileRoutesByFullPath {
   '/methodology': typeof MethodologyRoute
   '/news': typeof NewsRoute
   '/news-divergence': typeof NewsDivergenceRoute
+  '/order-flow': typeof OrderFlowRoute
   '/perpetual': typeof PerpetualRoute
   '/replay': typeof ReplayRoute
+  '/spoofing': typeof SpoofingRoute
   '/spot': typeof SpotRoute
   '/surveillance': typeof SurveillanceRoute
   '/system-health': typeof SystemHealthRoute
@@ -156,6 +177,7 @@ export interface FileRoutesByTo {
   '/aggregate-flows': typeof AggregateFlowsRoute
   '/auth': typeof AuthRoute
   '/comparison': typeof ComparisonRoute
+  '/cross-venue': typeof CrossVenueRoute
   '/dashboard': typeof DashboardRoute
   '/developers': typeof DevelopersRoute
   '/etf-flows': typeof EtfFlowsRoute
@@ -164,8 +186,10 @@ export interface FileRoutesByTo {
   '/methodology': typeof MethodologyRoute
   '/news': typeof NewsRoute
   '/news-divergence': typeof NewsDivergenceRoute
+  '/order-flow': typeof OrderFlowRoute
   '/perpetual': typeof PerpetualRoute
   '/replay': typeof ReplayRoute
+  '/spoofing': typeof SpoofingRoute
   '/spot': typeof SpotRoute
   '/surveillance': typeof SurveillanceRoute
   '/system-health': typeof SystemHealthRoute
@@ -179,6 +203,7 @@ export interface FileRoutesById {
   '/aggregate-flows': typeof AggregateFlowsRoute
   '/auth': typeof AuthRoute
   '/comparison': typeof ComparisonRoute
+  '/cross-venue': typeof CrossVenueRoute
   '/dashboard': typeof DashboardRoute
   '/developers': typeof DevelopersRoute
   '/etf-flows': typeof EtfFlowsRoute
@@ -187,8 +212,10 @@ export interface FileRoutesById {
   '/methodology': typeof MethodologyRoute
   '/news': typeof NewsRoute
   '/news-divergence': typeof NewsDivergenceRoute
+  '/order-flow': typeof OrderFlowRoute
   '/perpetual': typeof PerpetualRoute
   '/replay': typeof ReplayRoute
+  '/spoofing': typeof SpoofingRoute
   '/spot': typeof SpotRoute
   '/surveillance': typeof SurveillanceRoute
   '/system-health': typeof SystemHealthRoute
@@ -202,6 +229,7 @@ export interface FileRouteTypes {
     | '/aggregate-flows'
     | '/auth'
     | '/comparison'
+    | '/cross-venue'
     | '/dashboard'
     | '/developers'
     | '/etf-flows'
@@ -210,8 +238,10 @@ export interface FileRouteTypes {
     | '/methodology'
     | '/news'
     | '/news-divergence'
+    | '/order-flow'
     | '/perpetual'
     | '/replay'
+    | '/spoofing'
     | '/spot'
     | '/surveillance'
     | '/system-health'
@@ -223,6 +253,7 @@ export interface FileRouteTypes {
     | '/aggregate-flows'
     | '/auth'
     | '/comparison'
+    | '/cross-venue'
     | '/dashboard'
     | '/developers'
     | '/etf-flows'
@@ -231,8 +262,10 @@ export interface FileRouteTypes {
     | '/methodology'
     | '/news'
     | '/news-divergence'
+    | '/order-flow'
     | '/perpetual'
     | '/replay'
+    | '/spoofing'
     | '/spot'
     | '/surveillance'
     | '/system-health'
@@ -245,6 +278,7 @@ export interface FileRouteTypes {
     | '/aggregate-flows'
     | '/auth'
     | '/comparison'
+    | '/cross-venue'
     | '/dashboard'
     | '/developers'
     | '/etf-flows'
@@ -253,8 +287,10 @@ export interface FileRouteTypes {
     | '/methodology'
     | '/news'
     | '/news-divergence'
+    | '/order-flow'
     | '/perpetual'
     | '/replay'
+    | '/spoofing'
     | '/spot'
     | '/surveillance'
     | '/system-health'
@@ -268,6 +304,7 @@ export interface RootRouteChildren {
   AggregateFlowsRoute: typeof AggregateFlowsRoute
   AuthRoute: typeof AuthRoute
   ComparisonRoute: typeof ComparisonRoute
+  CrossVenueRoute: typeof CrossVenueRoute
   DashboardRoute: typeof DashboardRoute
   DevelopersRoute: typeof DevelopersRoute
   EtfFlowsRoute: typeof EtfFlowsRoute
@@ -276,8 +313,10 @@ export interface RootRouteChildren {
   MethodologyRoute: typeof MethodologyRoute
   NewsRoute: typeof NewsRoute
   NewsDivergenceRoute: typeof NewsDivergenceRoute
+  OrderFlowRoute: typeof OrderFlowRoute
   PerpetualRoute: typeof PerpetualRoute
   ReplayRoute: typeof ReplayRoute
+  SpoofingRoute: typeof SpoofingRoute
   SpotRoute: typeof SpotRoute
   SurveillanceRoute: typeof SurveillanceRoute
   SystemHealthRoute: typeof SystemHealthRoute
@@ -318,6 +357,13 @@ declare module '@tanstack/react-router' {
       path: '/comparison'
       fullPath: '/comparison'
       preLoaderRoute: typeof ComparisonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cross-venue': {
+      id: '/cross-venue'
+      path: '/cross-venue'
+      fullPath: '/cross-venue'
+      preLoaderRoute: typeof CrossVenueRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -376,6 +422,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NewsDivergenceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/order-flow': {
+      id: '/order-flow'
+      path: '/order-flow'
+      fullPath: '/order-flow'
+      preLoaderRoute: typeof OrderFlowRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/perpetual': {
       id: '/perpetual'
       path: '/perpetual'
@@ -388,6 +441,13 @@ declare module '@tanstack/react-router' {
       path: '/replay'
       fullPath: '/replay'
       preLoaderRoute: typeof ReplayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/spoofing': {
+      id: '/spoofing'
+      path: '/spoofing'
+      fullPath: '/spoofing'
+      preLoaderRoute: typeof SpoofingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/spot': {
@@ -447,6 +507,7 @@ const rootRouteChildren: RootRouteChildren = {
   AggregateFlowsRoute: AggregateFlowsRoute,
   AuthRoute: AuthRoute,
   ComparisonRoute: ComparisonRoute,
+  CrossVenueRoute: CrossVenueRoute,
   DashboardRoute: DashboardRoute,
   DevelopersRoute: DevelopersRoute,
   EtfFlowsRoute: EtfFlowsRoute,
@@ -455,8 +516,10 @@ const rootRouteChildren: RootRouteChildren = {
   MethodologyRoute: MethodologyRoute,
   NewsRoute: NewsRoute,
   NewsDivergenceRoute: NewsDivergenceRoute,
+  OrderFlowRoute: OrderFlowRoute,
   PerpetualRoute: PerpetualRoute,
   ReplayRoute: ReplayRoute,
+  SpoofingRoute: SpoofingRoute,
   SpotRoute: SpotRoute,
   SurveillanceRoute: SurveillanceRoute,
   SystemHealthRoute: SystemHealthRoute,
