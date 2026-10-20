@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS trades_read ON public.trades;
+CREATE POLICY trades_read ON public.trades FOR SELECT TO authenticated USING (public.has_role(auth.uid(),'analyst') OR public.has_role(auth.uid(),'admin'));
