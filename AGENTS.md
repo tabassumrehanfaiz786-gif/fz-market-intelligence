@@ -15,3 +15,4 @@
 - Keep reproducible research fixtures and pure calculations separate from real Cloud observation tables; this prevents demo evidence contaminating recorded market data.
 - Use authenticated server functions and owner-scoped RLS for personal case files and separate protected role rows for privileges; this enforces data isolation independently of UI visibility.
 - Live Binance market data streams browser-side via src/lib/market/use-binance-live.ts with LIVE/STALE/DISCONNECTED badges; simulated panels keep SIMULATED labels so live and sample data never mix.
+- Share browser live connections by market and candle polling by market/timeframe; bounded in-memory observations avoid duplicate requests, and reused observations remain marked stale/cached until refreshed. Public candles use a validated, short-lived server cache with direct-browser fallback because exchange access varies by host.
