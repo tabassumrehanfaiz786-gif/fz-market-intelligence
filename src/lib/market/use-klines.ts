@@ -4,7 +4,7 @@ import { candleRequestSchema, candleUrl, parseCandles, type Kline } from './cand
 export type { Kline } from './candle-data';
 type CandleState = { klines: Kline[]; error: boolean; status: 'loading' | 'fresh' | 'cached' | 'unavailable'; updatedAt: number | null };
 const initial: CandleState = { klines: [], error: false, status: 'loading', updatedAt: null };
-const stores = new Map<string, { state: CandleState; listeners: Set<(state: CandleState) => void>; pending?: Promise<void>; timer?: ReturnType<typeof setInterval> }>();
+const stores = new Map<string, { state: CandleState; listeners: Set<(state: CandleState) => void>; pending?: Promise<void> | undefined; timer?: ReturnType<typeof setInterval> | undefined }>();
 
 /** Real historical candles from the public Binance REST API (no key). Polls for fresh candles. */
 export function useKlines(market: string, timeframe: string) {
