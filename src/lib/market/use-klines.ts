@@ -1,45 +1,47 @@
 import { useEffect, useState } from 'react';
-
-export type Kline = { time: number; open: number; high: number; low: number; close: number; volume: number };
-
-const intervalMap: Record<string, { interval: string; limit: number }> = {
-  '1m': { interval: '1m', limit: 120 },
-  '5m': { interval: '5m', limit: 120 },
-  '15m': { interval: '15m', limit: 120 },
-  '30m': { interval: '30m', limit: 120 },
-  '1h': { interval: '1h', limit: 120 },
-  '4h': { interval: '4h', limit: 120 },
-  '1D': { interval: '1d', limit: 120 },
-  '1W': { interval: '1w', limit: 104 },
-  '1M': { interval: '1M', limit: 60 },
-  '6M': { interval: '1w', limit: 26 },
-  '1Y': { interval: '1M', limit: 12 },
-};
+import { getMarketCandles } from './candles.functions';
+import { candleRequestSchema, candleUrl, parseCandles, type Kline } from './candle-data';
+export type { Kline } from './candle-data';
+type CandleState = { klines: Kline[]; error: boolean; status: 'loading' | 'fresh' | 'cached' | 'unavailable'; updatedAt: number | null };
+const initial: CandleState = { klines: [], error: false, status: 'loading', updatedAt: null };
+const stores = new Map<string, { state: CandleState; listeners: Set<(state: CandleState) => void>; pending?: Promise<void> | undefined; timer?: ReturnType<typeof setInterval> | undefined }>();
 
 /** Real historical candles from the public Binance REST API (no key). Polls for fresh candles. */
 export function useKlines(market: string, timeframe: string) {
-  const [klines, setKlines] = useState<Kline[]>([]);
-  const [error, setError] = useState(false);
+  const key = `${market}:${timeframe}`;
+  const [snapshot, setSnapshot] = useState({ key, state: initial });
   useEffect(() => {
-    const cfg = intervalMap[timeframe] ?? intervalMap['4h']!;
-    const base = market === 'Perpetual' ? 'https://fapi.binance.com/fapi/v1/klines' : 'https://api.binance.com/api/v3/klines';
-    let cancelled = false;
-    const load = () => {
-      fetch(`${base}?symbol=BTCUSDT&interval=${cfg.interval}&limit=${cfg.limit}`)
-        .then((r) => r.json())
-        .then((rows: unknown[][]) => {
-          if (cancelled || !Array.isArray(rows)) return;
-          setKlines(rows.map((k) => ({ time: Number(k[0]), open: +k[1]!, high: +k[2]!, low: +k[3]!, close: +k[4]!, volume: +k[5]! })));
-          setError(false);
-        })
-        .catch(() => !cancelled && setError(true));
+    const input = candleRequestSchema.safeParse({ market, timeframe });
+    if (!input.success) { setSnapshot({ key, state: { ...initial, error: true, status: 'unavailable' } }); return; }
+    let found = stores.get(key);
+    if (!found) { found = { state: initial, listeners: new Set() }; stores.set(key, found); }
+    const store = found;
+    const listener = (state: CandleState) => setSnapshot({ key, state });
+    store.listeners.add(listener);
+    if (!store.timer && store.state.klines.length) store.state = { ...store.state, status: 'cached' };
+    listener(store.state);
+    const load = async () => {
+      if (store.pending) return store.pending;
+      store.pending = (async () => {
+        try {
+          let result;
+          try { result = await getMarketCandles({ data: input.data }); } catch { result = null; }
+          // If the cloud host cannot reach Binance, try the user's public connection.
+          if (!result || result.error) {
+            const response = await fetch(candleUrl(input.data), { signal: AbortSignal.timeout(5000) });
+            if (!response.ok) throw new Error('Candles unavailable');
+            result = { klines: parseCandles(await response.json()), updatedAt: Date.now(), error: false };
+          }
+          store.state = { ...result, status: 'fresh' };
+        } catch { store.state = { ...store.state, error: true, status: store.state.klines.length ? 'cached' : 'unavailable' }; }
+        finally { store.pending = undefined; store.listeners.forEach((notify) => notify(store.state)); }
+      })();
+      return store.pending;
     };
-    setKlines([]);
-    load();
-    const timer = setInterval(load, 15000);
-    return () => { cancelled = true; clearInterval(timer); };
-  }, [market, timeframe]);
-  return { klines, error };
+    if (!store.timer) { void load(); store.timer = setInterval(load, 15000); }
+    return () => { store.listeners.delete(listener); if (!store.listeners.size) { clearInterval(store.timer); store.timer = undefined; } };
+  }, [market, timeframe, key]);
+  return snapshot.key === key ? snapshot.state : initial;
 }
 
 /** Session VWAP across the loaded candles (typical price weighted by volume). */

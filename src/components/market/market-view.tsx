@@ -22,7 +22,7 @@ export function MarketView({ initialMarket = 'Spot' }: { initialMarket?: string 
   const [showControls, setShowControls] = useState(true);
 
   const live = useBinanceLive(market);
-  const { klines } = useKlines(market, timeframe);
+  const { klines, status: candleStatus } = useKlines(market, timeframe);
   const liveNow = live.status === 'live';
 
   const bidVol = live.bids.reduce((a, l) => a + l[1], 0);
@@ -40,7 +40,7 @@ export function MarketView({ initialMarket = 'Spot' }: { initialMarket?: string 
     const min = Math.min(...points, 0), max = Math.max(...points, 0);
     const span = max - min || 1;
     const coords = points.map((p, i) => `${((i / (points.length - 1)) * 600).toFixed(1)} ${(110 - ((p - min) / span) * 90).toFixed(1)}`);
-    return { line: `M${coords.join('L')}`, fill: `M${coords.join('L')}V125H0Z`, up: points[points.length - 1]! >= 0 };
+    return { line: `M${coords.join('L')}`, fill: `M${coords.join('L')}V125H0Z`, up: (points.at(-1) ?? 0) >= 0 };
   }, [live.trades]);
 
   const levels = useMemo(() => {
@@ -52,12 +52,12 @@ export function MarketView({ initialMarket = 'Spot' }: { initialMarket?: string 
   const exportData = () => {
     const rows = [
       'data_status,market,time_window,last_price,bid_depth_btc,ask_depth_btc,source',
-      `live,BTCUSDT ${market},${timeframe},${live.price ?? ''},${bidVol.toFixed(4)},${askVol.toFixed(4)},Binance public stream (not recorded)`,
+      `${live.status},BTCUSDT ${market},${timeframe},${live.price ?? ''},${bidVol.toFixed(4)},${askVol.toFixed(4)},Binance public stream (not recorded)`,
     ];
     const blob = new Blob([rows.join('\n') + '\n'], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = 'fz-market-live-snapshot.csv'; a.click(); URL.revokeObjectURL(url);
-    setNotice('Live snapshot exported. Values are real-time Binance observations, not stored history.');
+    setNotice(`Snapshot exported (${live.status}). Binance observations, not stored history.`);
   };
 
   return (
@@ -69,7 +69,7 @@ export function MarketView({ initialMarket = 'Spot' }: { initialMarket?: string 
         <div className="market-stat"><div className="stat-label">Displayed liquidity</div><div className="stat-value">{fmt(bidVol + askVol, 1)} <span className="text-[10px] text-muted-foreground">BTC</span></div><div className="stat-foot">Live top-20 resting depth</div></div>
         <div className="market-stat"><div className="stat-label">Bid / ask imbalance</div><div className={`stat-value ${(imbalance ?? 0) >= 0 ? 'text-positive' : 'text-negative'}`}>{imbalance == null ? '—' : `${imbalance >= 0 ? '+' : ''}${imbalance.toFixed(2)}`}<span className="text-sm">%</span></div><div className="stat-foot">Live order book</div></div>
         <div className="market-stat"><div className="stat-label">Session delta</div><div className={`stat-value ${cvd >= 0 ? 'text-positive' : 'text-negative'}`}>{cvd >= 0 ? '+' : ''}{cvd.toFixed(2)}</div><div className="stat-foot">BTC · live trades this session</div></div>
-        <div className="market-stat"><div className="stat-label">VWAP</div><div className="stat-value text-analysis">{fmt(vwapValue)}</div><div className="stat-foot">USDT · {timeframe} candles</div></div>
+         <div className="market-stat"><div className="stat-label">VWAP</div><div className="stat-value text-analysis">{fmt(vwapValue)}</div><div className="stat-foot">USDT · {timeframe} candles · {candleStatus === 'cached' ? 'CACHED' : candleStatus.toUpperCase()}</div></div>
       </div>
       {details && <section className="mb-5 border-y border-border py-4"><h2 className="font-medium text-sm">Data & methodology</h2><p className="mt-2 text-xs text-muted-foreground leading-6">All values on this page are real market data from the public Binance BTCUSDT stream (spot or USDⓈ-M perpetual): candles via the public REST API, trades and top-20 order-book depth via websocket. Depth history is recorded only while this page is open and is not stored. Single-venue data; funding, open interest and full historical depth are unavailable.</p></section>}
       <section className="chart-panel" ref={(el) => { if (el && expanded) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); }}>

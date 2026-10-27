@@ -20,30 +20,31 @@ export function LiquidityHeatmap({ timeframe, intensity, bubbles, vwap, market, 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hover, setHover] = useState<{ price: string; time: string } | null>(null);
   const live = useBinanceLive(market);
-  const { klines } = useKlines(market, timeframe);
+  const { klines, status: candleStatus, updatedAt } = useKlines(market, timeframe);
   const snapshotsRef = useRef<DepthSnapshot[]>([]);
   const tradesRef = useRef(live.trades);
   const sessionStartRef = useRef<number>(Date.now());
   tradesRef.current = live.trades;
 
-  // Record live order-book snapshots (paused while "playing" is false? no: playing pauses recording)
+  useEffect(() => { snapshotsRef.current = []; sessionStartRef.current = Date.now(); }, [market]);
+
+  // Record only fresh depth while running.
   useEffect(() => {
+    if (live.status !== 'live' || !playing) return;
     if (!live.bids.length && !live.asks.length) return;
-    if (!playing && snapshotsRef.current.length > 0) {
-      // still record the first snapshot so the heatmap is never empty
-    }
     const levels: [number, number][] = [
       ...live.bids.map(([p, q]) => [p, q] as [number, number]),
       ...live.asks.map(([p, q]) => [p, -q] as [number, number]),
     ];
     const snaps = snapshotsRef.current;
-    if (snaps.length && Date.now() - snaps[snaps.length - 1]!.t < 1000) {
+    const previous = snaps.at(-1);
+    if (previous && Date.now() - previous.t < 1000) {
       snaps[snaps.length - 1] = { t: Date.now(), levels };
     } else {
       snaps.push({ t: Date.now(), levels });
       if (snaps.length > 240) snaps.shift();
     }
-  }, [live.bids, live.asks, playing]);
+  }, [live.bids, live.asks, live.status, playing]);
 
   useEffect(() => {
     const canvas = canvasRef.current; if (!canvas) return;
@@ -61,7 +62,7 @@ export function LiquidityHeatmap({ timeframe, intensity, bubbles, vwap, market, 
 
       if (!klines.length) {
         context.fillStyle = color('--muted-foreground'); context.font = '11px "IBM Plex Mono", monospace';
-        context.fillText('Loading live Binance candles…', 16, 24);
+        context.fillText(candleStatus === 'unavailable' ? 'Binance candles unavailable — retrying…' : 'Loading Binance candles…', 16, 24);
         return;
       }
 
@@ -184,10 +185,11 @@ export function LiquidityHeatmap({ timeframe, intensity, bubbles, vwap, market, 
     const observer = new ResizeObserver(draw); observer.observe(canvas);
     const timer = setInterval(draw, 2000); // refresh with live data
     return () => { observer.disconnect(); clearInterval(timer); cancelAnimationFrame(frame); };
-  }, [timeframe, intensity, bubbles, vwap, market, zoom, playing, klines, live.price, live.bids, live.asks]);
+  }, [timeframe, intensity, bubbles, vwap, market, zoom, playing, klines, candleStatus, live.price, live.bids, live.asks]);
 
   return (
     <div className="chart-area">
+      <div className="absolute bottom-0 left-2 text-[9px] text-muted-foreground z-10" role="status">Candles · {candleStatus.toUpperCase()}{updatedAt ? ` · ${new Date(updatedAt).toISOString().slice(11, 19)} UTC` : ''} · Feed {live.status.toUpperCase()}</div>
       <canvas
         ref={canvasRef}
         aria-label={`${market} live liquidity heatmap, ${timeframe} window, Binance BTCUSDT`}
@@ -199,7 +201,7 @@ export function LiquidityHeatmap({ timeframe, intensity, bubbles, vwap, market, 
       />
       {hover && (
         <div className="chart-tooltip">
-          <div className="text-positive">LIVE · BINANCE BTCUSDT</div>
+          <div className="text-positive">{live.status.toUpperCase()} · BINANCE BTCUSDT</div>
           <div className="mt-2">Candles, depth and trades are real market data.</div>
           <div>Depth history is recorded only while this page is open.</div>
         </div>
