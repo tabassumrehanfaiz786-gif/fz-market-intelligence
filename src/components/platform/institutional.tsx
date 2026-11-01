@@ -25,7 +25,7 @@ export function WhaleOrderFlow() {
   return (
     <main className="research-content">
       <PageHeader eyebrow="Order flow / Size-tiered delta" title="Whale vs retail order flow" description="Live Binance spot aggressor volume split by trade notional, accumulated while this page is open." />
-      <div className="research-filterbar"><AssetPicker value={symbol} onChange={setSymbol} /><DataBadge status={status(f.status)} /></div>
+      <div className="research-filterbar"><AssetPicker value={symbol} onChange={setSymbol} /><DataBadge status={status(f.status)} />{f.source && <span className="data-badge live">SOURCE · {f.source.toUpperCase()}</span>}</div>
       <div className="research-metrics">
         <Metric label="Last price" value={f.price ? f.price.toLocaleString('en-US', { maximumFractionDigits: 2 }) : '—'} unit="USDT" foot={`Live ${symbol}`} />
         <Metric label="Retail delta" value={sgn(rD, 3)} unit={base} foot="Trades < $10k" tone={rD >= 0 ? 'text-positive' : 'text-negative'} />
@@ -41,7 +41,7 @@ export function WhaleOrderFlow() {
           </div>); })}
       </section>
       <MethodNote>Tiers use individual aggregated trades (price × quantity). Large orders are often split into many small fills, so whale activity can be under-counted. Divergence is a research observation, not evidence of identity or intent.</MethodNote>
-      <ForensicCapture title={`Size-tiered order flow · ${symbol}`} collect={() => ({ evidence: [...tiers.map((t) => { const s = f.tierStats[t.key]; return { metric: `${t.label} delta (${t.range})`, value: `${sgn(s.buy - s.sell, 4)} ${base} · buy ${s.buy.toFixed(4)} / sell ${s.sell.toFixed(4)} · ${s.count} trades`, source: `Binance spot aggTrade ${symbol} · session from ${iso(f.sessionStart)}`, timestamp: iso(f.lastUpdate ?? Date.now()) }; }), { metric: 'Tier signature', value: signature, source: 'FZ tier rule v1', timestamp: iso(Date.now()) }], raw: { tierStats: f.tierStats, lastTradeId: f.lastTradeId, bids: f.bids, asks: f.asks } })} />
+      <ForensicCapture title={`Size-tiered order flow · ${symbol}`} collect={() => ({ evidence: [...tiers.map((t) => { const s = f.tierStats[t.key]; return { metric: `${t.label} delta (${t.range})`, value: `${sgn(s.buy - s.sell, 4)} ${base} · buy ${s.buy.toFixed(4)} / sell ${s.sell.toFixed(4)} · ${s.count} trades`, source: `${f.source ?? "Binance"} spot trades ${symbol} · session from ${iso(f.sessionStart)}`, timestamp: iso(f.lastUpdate ?? Date.now()) }; }), { metric: 'Tier signature', value: signature, source: 'FZ tier rule v1', timestamp: iso(Date.now()) }], raw: { tierStats: f.tierStats, lastTradeId: f.lastTradeId, bids: f.bids, asks: f.asks } })} />
     </main>
   );
 }
@@ -55,7 +55,7 @@ export function SpoofingRadar() {
   return (
     <main className="research-content">
       <PageHeader eyebrow="Surveillance / Liquidity lifecycle" title="Spoofing & cancellation radar" description="Tracks large resting walls (≥5× median level size) in the live top-20 book and classifies each removal as filled or cancelled." />
-      <div className="research-filterbar"><AssetPicker value={symbol} onChange={setSymbol} /><DataBadge status={status(f.status)} /></div>
+      <div className="research-filterbar"><AssetPicker value={symbol} onChange={setSymbol} /><DataBadge status={status(f.status)} />{f.source && <span className="data-badge live">SOURCE · {f.source.toUpperCase()}</span>}</div>
       <div className="research-metrics">
         <Metric label="Walls resting now" value={String(f.walls.length - done.length)} foot="Live order book" />
         <Metric label="Fill-to-cancel ratio" value={cancelled ? (filled / cancelled).toFixed(2) : done.length ? '∞' : '—'} foot={`${filled} filled · ${cancelled} cancelled`} />
@@ -69,7 +69,7 @@ export function SpoofingRadar() {
         </tbody></table></div>
       </section>
       <MethodNote>A "candidate spoof" is a quantitative flag only. Fast cancellations are routine for market makers and risk systems; this does not establish intent or a regulatory breach (FCA MAR, EU MiCA).</MethodNote>
-      <ForensicCapture title={`Liquidity cancellation radar · ${symbol}`} collect={() => ({ evidence: [{ metric: 'Fill / cancel counts', value: `${filled} filled · ${cancelled} cancelled`, source: `Binance spot depth20@100ms ${symbol}`, timestamp: iso(Date.now()) }, ...flagged.slice(0, 20).map((w) => ({ metric: `Candidate spoof · ${w.side} ${w.price}`, value: `${w.qty.toFixed(4)} rested ${((w.lastSeen - w.firstSeen) / 1000).toFixed(3)}s · ${w.distanceBps.toFixed(1)} bps from mid`, source: 'FZ wall rule v1 (<5s, <10bps, not traded through)', timestamp: `${iso(w.firstSeen)} → ${iso(w.lastSeen)}` }))], raw: { walls: f.walls, bids: f.bids, asks: f.asks } })} />
+      <ForensicCapture title={`Liquidity cancellation radar · ${symbol}`} collect={() => ({ evidence: [{ metric: 'Fill / cancel counts', value: `${filled} filled · ${cancelled} cancelled`, source: `${f.source ?? "Binance"} spot depth ${symbol}`, timestamp: iso(Date.now()) }, ...flagged.slice(0, 20).map((w) => ({ metric: `Candidate spoof · ${w.side} ${w.price}`, value: `${w.qty.toFixed(4)} rested ${((w.lastSeen - w.firstSeen) / 1000).toFixed(3)}s · ${w.distanceBps.toFixed(1)} bps from mid`, source: 'FZ wall rule v1 (<5s, <10bps, not traded through)', timestamp: `${iso(w.firstSeen)} → ${iso(w.lastSeen)}` }))], raw: { walls: f.walls, bids: f.bids, asks: f.asks } })} />
     </main>
   );
 }
