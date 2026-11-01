@@ -43,7 +43,7 @@ export function IcebergSurveillance() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         {[['Feed', s.status.toUpperCase()], ['Last price', s.price?.toLocaleString() ?? '—'], ['Active candidates', String(active.length)], ['Absorbed notional', `$${Math.round(totalAbsorbed).toLocaleString()}`]].map(([k, v]) => (
-          <div key={k} className="research-metric"><div className="stat-label">{k}<span className={`data-badge ${s.status === 'live' ? 'live' : 'unavailable'}`}>{s.status === 'live' ? 'LIVE' : s.status.toUpperCase()}</span></div><div className="stat-value">{v}</div><p className="stat-foot">{s.tradesSeen} trades · {s.depthUpdates} depth snapshots this session</p></div>
+          <div key={k} className="research-metric"><div className="stat-label">{k}<span className={`data-badge ${s.status === 'live' ? 'live' : 'unavailable'}`}>{s.status === "live" ? `LIVE · ${(s.source ?? "Binance").toUpperCase()}` : s.status.toUpperCase()}</span></div><div className="stat-value">{v}</div><p className="stat-foot">{s.tradesSeen} trades · {s.depthUpdates} depth snapshots this session</p></div>
         ))}
       </div>
 
@@ -70,7 +70,7 @@ export function IcebergSurveillance() {
       <MethodNote>Candidates are heuristic patterns from public data. Iceberg orders are lawful; a flag is not evidence of manipulation, of who placed an order, or of intent. Alternative explanations: market makers refreshing quotes, multiple independent traders at one price, or feed latency.</MethodNote>
 
       <ForensicCapture title={`Iceberg surveillance dossier — ${symbol}`} collect={() => ({
-        evidence: s.candidates.map((c) => ({ metric: `${c.side} ${c.price} (${label[c.classification]})`, value: `executed ${c.executed.toFixed(6)} vs peak ${c.peakDisplayed} · ${c.reloadRatio.toFixed(2)}x · ${c.reloads} refills`, source: `Binance spot ${symbol} aggTrade + depth20@100ms`, timestamp: iso(c.lastSeen) })),
+        evidence: s.candidates.map((c) => ({ metric: `${c.side} ${c.price} (${label[c.classification]})`, value: `executed ${c.executed.toFixed(6)} vs peak ${c.peakDisplayed} · ${c.reloadRatio.toFixed(2)}x · ${c.reloads} refills`, source: `${s.source ?? "Binance"} spot ${symbol} trades + depth`, timestamp: iso(c.lastSeen) })),
         raw: { symbol, candidates: s.candidates, price: s.price },
       })} />
     </main>
