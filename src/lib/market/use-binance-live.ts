@@ -15,7 +15,7 @@ export type LiveState = {
   bids: LiveLevel[];
   asks: LiveLevel[];
   lastUpdate: number | null;
-  source?: 'Binance' | 'Bybit';
+  source?: 'Binance' | 'Bybit' | 'Coinbase';
 };
 
 const stores = new Map<string, ReturnType<typeof createLiveFeedStore>>();

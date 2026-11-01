@@ -1,4 +1,5 @@
 import type { LiveLevel, LiveState, LiveTrade } from './use-binance-live';
+import { openCoinbase } from './exchange-stream';
 
 export const emptyLiveState: LiveState = { status: 'connecting', price: null, change24h: null, high24h: null, low24h: null, volume24h: null, trades: [], bids: [], asks: [], lastUpdate: null };
 
@@ -22,7 +23,7 @@ export function createLiveFeedStore(market: string) {
     ? ['wss://fstream.binance.com/market/stream?streams=btcusdt@ticker/btcusdt@aggTrade', 'wss://fstream.binance.com/public/stream?streams=btcusdt@depth20@500ms']
     : ['wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/btcusdt@aggTrade/btcusdt@depth20@1000ms'];
   const connect = (url: string) => {
-    if (!active) return;
+    if (!active || coinbaseStop) return;
     const ws = new WebSocket(url);
     sockets.add(ws);
     ws.onmessage = (event) => {
@@ -67,8 +68,22 @@ export function createLiveFeedStore(market: string) {
   let fallback: WebSocket | null = null;
   let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
   const book = { b: new Map<number, number>(), a: new Map<number, number>() };
+  let coinbaseStop: (() => void) | undefined;
   const startFallback = () => {
-    if (!active || fallback || urls.some((u) => seen.has(u))) return;
+    if (!active || fallback || coinbaseStop || urls.some((u) => seen.has(u))) return;
+    if (market !== 'Perpetual') {
+      // Coinbase BTC-USD: reachable on networks that block Binance and Bybit.
+      sockets.forEach((x) => x.close());
+      const mark = (next: LiveState) => { seen.set('bybit', Date.now()); update({ ...next, status: 'live', lastUpdate: Date.now(), source: 'Coinbase' }); };
+      fallback = {} as WebSocket;
+      coinbaseStop = openCoinbase('BTC-USD', {
+        onTicker: (t) => mark({ ...state, ...t }),
+        onTrade: (t) => mark({ ...state, price: t.price, trades: [{ id: t.id, price: t.price, qty: t.qty, time: t.time, side: t.sellAggressor ? 'sell' : 'buy' } as LiveTrade, ...state.trades.filter((x) => x.id !== t.id)].slice(0, 40) }),
+        onDepth: (d) => mark({ ...state, bids: d.bids as LiveLevel[], asks: d.asks as LiveLevel[] }),
+        onDown: () => update({ ...state, status: 'disconnected' }),
+      });
+      return;
+    }
     const ws = new WebSocket(market === 'Perpetual' ? 'wss://stream.bybit.com/v5/public/linear' : 'wss://stream.bybit.com/v5/public/spot');
     fallback = ws;
     ws.onopen = () => ws.send(JSON.stringify({ op: 'subscribe', args: ['tickers.BTCUSDT', 'publicTrade.BTCUSDT', 'orderbook.50.BTCUSDT'] }));
@@ -109,7 +124,7 @@ export function createLiveFeedStore(market: string) {
   };
   const stop = () => {
     active = false;
-    clearTimeout(fallbackTimer); fallback?.close(); fallback = null; seen.delete('bybit');
+    clearTimeout(fallbackTimer); coinbaseStop?.(); coinbaseStop = undefined; if (fallback?.close) fallback.close(); fallback = null; seen.delete('bybit');
     clearInterval(staleTimer); clearTimeout(flushTimer);
     flushTimer = undefined;
     retries.forEach(clearTimeout); retries.clear(); seen.clear();

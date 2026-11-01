@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { openTradeDepth, type StreamSource } from './exchange-stream';
 
 export type Tier = 'retail' | 'mid' | 'large' | 'whale';
 export const tiers: { key: Tier; label: string; range: string; min: number }[] = [
@@ -22,6 +23,7 @@ export type OrderFlowState = {
   sessionStart: number;
   lastUpdate: number | null;
   lastTradeId: number | null;
+  source?: StreamSource;
 };
 
 const emptyTiers = (): Record<Tier, TierStats> => ({ retail: { buy: 0, sell: 0, count: 0 }, mid: { buy: 0, sell: 0, count: 0 }, large: { buy: 0, sell: 0, count: 0 }, whale: { buy: 0, sell: 0, count: 0 } });
@@ -35,27 +37,13 @@ export function classifyWall(side: 'bid' | 'ask', wallPrice: number, lowSeen: nu
 export function useOrderFlow(symbol = 'BTCUSDT', wallMultiple = 5): OrderFlowState {
   const [state, setState] = useState<OrderFlowState>(() => ({ status: 'connecting', price: null, tierStats: emptyTiers(), walls: [], bids: [], asks: [], sessionStart: Date.now(), lastUpdate: null, lastTradeId: null }));
   useEffect(() => {
-    const s = symbol.toLowerCase();
-    let closed = false; let ws: WebSocket | undefined; let retry: ReturnType<typeof setTimeout> | undefined;
     const tierStats = emptyTiers();
     const active = new Map<string, WallEvent & { low: number; high: number }>();
     let history: WallEvent[] = [];
     let price: number | null = null; let lastTradeId: number | null = null;
     setState({ status: 'connecting', price: null, tierStats: emptyTiers(), walls: [], bids: [], asks: [], sessionStart: Date.now(), lastUpdate: null, lastTradeId: null });
-    const connect = () => {
-      ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${s}@aggTrade/${s}@depth20@100ms`);
-      ws.onmessage = (ev) => {
-        const { stream, data } = JSON.parse(ev.data);
-        const now = Date.now();
-        if (stream.endsWith('@aggTrade')) {
-          const p = +data.p, q = +data.q; price = p; lastTradeId = data.a;
-          const t = tierStats[tierOf(p * q)];
-          if (data.m) t.sell += q; else t.buy += q; t.count++;
-          for (const w of active.values()) { w.low = Math.min(w.low, p); w.high = Math.max(w.high, p); }
-          setState((st) => ({ ...st, status: 'live', price, tierStats: { ...tierStats }, lastUpdate: now, lastTradeId }));
-        } else {
-          const bids = (data.bids as string[][]).map((l) => [+l[0]!, +l[1]!] as [number, number]);
-          const asks = (data.asks as string[][]).map((l) => [+l[0]!, +l[1]!] as [number, number]);
+    const onDepth = ({ bids, asks }: { bids: [number, number][]; asks: [number, number][] }) => {
+          const now = Date.now();
           const all = [...bids, ...asks];
           const median = all.map((l) => l[1]).sort((a, b) => a - b)[Math.floor(all.length / 2)] ?? 0;
           const threshold = Math.max(median * wallMultiple, 0.0001);
@@ -72,7 +60,6 @@ export function useOrderFlow(symbol = 'BTCUSDT', wallMultiple = 5): OrderFlowSta
           const bestBid = bids[0]?.[0] ?? 0, bestAsk = asks.at(-1)?.[0] ?? Infinity, worstBid = bids.at(-1)?.[0] ?? 0;
           for (const [id, w] of active) {
             if (seen.has(id)) continue;
-            // Level left the visible 20-level window because price moved away: not an observed removal.
             const outOfWindow = w.side === 'bid' ? w.price < worstBid : w.price > bestAsk;
             active.delete(id);
             if (outOfWindow) continue;
@@ -81,13 +68,20 @@ export function useOrderFlow(symbol = 'BTCUSDT', wallMultiple = 5): OrderFlowSta
           }
           const resting: WallEvent[] = [...active.values()].map(({ low, high, ...r }) => r);
           setState((st) => ({ ...st, status: 'live', bids, asks, walls: [...resting, ...history], lastUpdate: now }));
-        }
-      };
-      ws.onclose = () => { if (closed) return; setState((st) => ({ ...st, status: 'disconnected' })); retry = setTimeout(connect, 3000); };
-      ws.onerror = () => ws?.close();
     };
-    connect();
-    return () => { closed = true; clearTimeout(retry); ws?.close(); };
+    const close = openTradeDepth(symbol, {
+      onSource: (source) => setState((st) => ({ ...st, source })),
+      onDown: () => setState((st) => ({ ...st, status: 'disconnected' })),
+      onTrade: ({ id, price: p, qty: q, sellAggressor }) => {
+        price = p; lastTradeId = id;
+        const t = tierStats[tierOf(p * q)];
+        if (sellAggressor) t.sell += q; else t.buy += q; t.count++;
+        for (const w of active.values()) { w.low = Math.min(w.low, p); w.high = Math.max(w.high, p); }
+        setState((st) => ({ ...st, status: 'live', price, tierStats: { ...tierStats }, lastUpdate: Date.now(), lastTradeId }));
+      },
+      onDepth,
+    });
+    return close;
   }, [symbol, wallMultiple]);
   return state;
 }
