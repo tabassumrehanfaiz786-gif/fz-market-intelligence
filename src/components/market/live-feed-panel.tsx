@@ -19,7 +19,7 @@ export function LiveFeedPanel({ market }: { market: string }) {
       </div>
       <div className="live-grid">
         <div className="live-col">
-          <div className="stat-label">Last price <span className={`ml-auto data-badge ${badge}`}>{live ? 'LIVE' : statusLabel[s.status]}</span></div>
+          <div className="stat-label">Last price <span className={`ml-auto data-badge ${badge}`}>{live ? `LIVE · ${(s.source ?? 'Binance').toUpperCase()}` : statusLabel[s.status]}</span></div>
           <div className="stat-value text-2xl" data-testid="live-price">{fmt(s.price)} <span className="text-[10px] text-muted-foreground">USDT</span></div>
           <div className={`stat-foot ${s.change24h != null && s.change24h >= 0 ? 'text-positive' : 'text-negative'}`}>{s.change24h == null ? '—' : `${s.change24h >= 0 ? '+' : ''}${s.change24h.toFixed(2)}%`} <span className="text-muted-foreground">· 24h</span></div>
           <div className="mt-3 grid grid-cols-2 gap-2 text-[10px] text-muted-foreground font-mono">
@@ -30,7 +30,7 @@ export function LiveFeedPanel({ market }: { market: string }) {
           </div>
         </div>
         <div className="live-col">
-          <div className="stat-label">Live trades <span className={`ml-auto data-badge ${badge}`}>{live ? 'LIVE' : statusLabel[s.status]}</span></div>
+          <div className="stat-label">Live trades <span className={`ml-auto data-badge ${badge}`}>{live ? `LIVE · ${(s.source ?? 'Binance').toUpperCase()}` : statusLabel[s.status]}</span></div>
           <div className="live-list">
             {s.trades.length === 0 && <div className="text-muted-foreground text-[11px] py-4">Waiting for trades…</div>}
             {s.trades.slice(0, 12).map(t => (
@@ -39,7 +39,7 @@ export function LiveFeedPanel({ market }: { market: string }) {
           </div>
         </div>
         <div className="live-col">
-          <div className="stat-label">Order book · top 10 <span className={`ml-auto data-badge ${badge}`}>{live ? 'LIVE' : statusLabel[s.status]}</span></div>
+          <div className="stat-label">Order book · top 10 <span className={`ml-auto data-badge ${badge}`}>{live ? `LIVE · ${(s.source ?? 'Binance').toUpperCase()}` : statusLabel[s.status]}</span></div>
           <div className="live-list">
             {s.asks.length === 0 && <div className="text-muted-foreground text-[11px] py-4">Waiting for depth…</div>}
             {s.asks.slice(0, 10).reverse().map(([p, q]) => <div key={'a' + p} className="live-row depth-row" style={{ ['--w' as string]: `${(q / maxQty) * 100}%` }} data-side="ask"><span className="text-negative">{fmt(p)}</span><span>{q.toFixed(4)}</span></div>)}
