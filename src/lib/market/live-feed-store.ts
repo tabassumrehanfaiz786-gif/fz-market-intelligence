@@ -16,7 +16,7 @@ export function createLiveFeedStore(market: string) {
   const publish = () => { listeners.forEach((listener) => listener(state)); };
   const update = (next: LiveState) => {
     state = next;
-    if (!flushTimer) flushTimer = setTimeout(() => { flushTimer = undefined; publish(); }, 100);
+    if (!flushTimer) flushTimer = setTimeout(() => { flushTimer = undefined; publish(); }, 250);
   };
   const urls = market === 'Perpetual'
     ? ['wss://fstream.binance.com/market/stream?streams=btcusdt@ticker/btcusdt@aggTrade', 'wss://fstream.binance.com/public/stream?streams=btcusdt@depth20@500ms']
@@ -48,22 +48,68 @@ export function createLiveFeedStore(market: string) {
           next = { ...state, bids: levels(data.bids ?? data.b), asks: levels(data.asks ?? data.a) };
         } else return;
         seen.set(url, now);
+        if (fallback) return;
         const allFresh = urls.every((u) => now - (seen.get(u) ?? 0) <= 10000);
-        update({ ...next, status: allFresh ? 'live' : 'connecting', lastUpdate: now });
+        update({ ...next, status: allFresh ? 'live' : 'connecting', lastUpdate: now, source: 'Binance' });
       } catch { /* Ignore malformed exchange frames without breaking the feed. */ }
     };
     ws.onclose = () => {
       sockets.delete(ws);
       if (!active) return;
       seen.delete(url);
-      update({ ...state, status: 'disconnected' });
+      if (!fallback) update({ ...state, status: 'disconnected' });
       const retry = setTimeout(() => { retries.delete(retry); connect(url); }, 3000);
       retries.add(retry);
     };
     ws.onerror = () => ws.close();
   };
+  // Bybit public fallback for networks that block Binance; same BTC/USDT pair, labelled by source.
+  let fallback: WebSocket | null = null;
+  let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
+  const book = { b: new Map<number, number>(), a: new Map<number, number>() };
+  const startFallback = () => {
+    if (!active || fallback || urls.some((u) => seen.has(u))) return;
+    const ws = new WebSocket(market === 'Perpetual' ? 'wss://stream.bybit.com/v5/public/linear' : 'wss://stream.bybit.com/v5/public/spot');
+    fallback = ws;
+    ws.onopen = () => ws.send(JSON.stringify({ op: 'subscribe', args: ['tickers.BTCUSDT', 'publicTrade.BTCUSDT', 'orderbook.50.BTCUSDT'] }));
+    ws.onmessage = (event) => {
+      if (!active) return;
+      try {
+        const m = JSON.parse(event.data);
+        const topic: string = m.topic ?? '';
+        const d = m.data;
+        if (!d) return;
+        const num = (v: unknown) => v != null && v !== '' && Number.isFinite(Number(v)) ? Number(v) : null;
+        let next = state;
+        if (topic.startsWith('tickers')) {
+          const pct = num(d.price24hPcnt);
+          next = { ...state, price: num(d.lastPrice) ?? state.price, change24h: pct != null ? pct * 100 : state.change24h, high24h: num(d.highPrice24h) ?? state.high24h, low24h: num(d.lowPrice24h) ?? state.low24h, volume24h: num(d.volume24h) ?? state.volume24h };
+        } else if (topic.startsWith('publicTrade') && Array.isArray(d)) {
+          const fresh: LiveTrade[] = d.map((t: { i: string; p: string; v: string; T: number; S: string }, k: number) => ({ id: Number(t.T) * 100 + k, price: Number(t.p), qty: Number(t.v), time: Number(t.T), side: (t.S === 'Sell' ? 'sell' : 'buy') as LiveTrade['side'] })).filter((t) => t.price > 0 && t.qty > 0).reverse();
+          if (!fresh.length) return;
+          next = { ...state, price: fresh[0]!.price, trades: [...fresh, ...state.trades].slice(0, 40) };
+        } else if (topic.startsWith('orderbook')) {
+          if (m.type === 'snapshot') { book.b.clear(); book.a.clear(); }
+          const apply = (side: Map<number, number>, rows: unknown) => Array.isArray(rows) && rows.forEach((r) => { const p = Number(r[0]), q = Number(r[1]); if (!Number.isFinite(p)) return; if (q > 0) side.set(p, q); else side.delete(p); });
+          apply(book.b, d.b); apply(book.a, d.a);
+          next = { ...state, bids: [...book.b].sort((x, y) => y[0] - x[0]).slice(0, 20) as LiveLevel[], asks: [...book.a].sort((x, y) => x[0] - y[0]).slice(0, 20) as LiveLevel[] };
+        } else return;
+        seen.set('bybit', Date.now());
+        update({ ...next, status: 'live', lastUpdate: Date.now(), source: 'Bybit' });
+      } catch { /* ignore malformed frames */ }
+    };
+    ws.onclose = () => {
+      if (fallback === ws) fallback = null;
+      seen.delete('bybit');
+      if (!active) return;
+      update({ ...state, status: 'disconnected' });
+      fallbackTimer = setTimeout(startFallback, 3000);
+    };
+    ws.onerror = () => ws.close();
+  };
   const stop = () => {
     active = false;
+    clearTimeout(fallbackTimer); fallback?.close(); fallback = null; seen.delete('bybit');
     clearInterval(staleTimer); clearTimeout(flushTimer);
     flushTimer = undefined;
     retries.forEach(clearTimeout); retries.clear(); seen.clear();
@@ -78,8 +124,10 @@ export function createLiveFeedStore(market: string) {
         active = true;
         state = { ...state, status: state.lastUpdate ? 'stale' : 'connecting', trades: [] };
         urls.forEach(connect);
+        fallbackTimer = setTimeout(startFallback, 4000);
         staleTimer = setInterval(() => {
-          if (state.lastUpdate && urls.some((url) => Date.now() - (seen.get(url) ?? 0) > 10000)) update({ ...state, status: 'stale' });
+          const keys = fallback ? ['bybit'] : urls;
+          if (state.lastUpdate && keys.some((k) => Date.now() - (seen.get(k) ?? 0) > 10000)) update({ ...state, status: 'stale' });
         }, 2000);
       }
       listener(state);
