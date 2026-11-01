@@ -20,7 +20,7 @@ describe('Shared market loading', () => {
     const leaveA = store.subscribe(a), leaveB = store.subscribe(b);
     expect(FakeSocket.instances).toHaveLength(1);
     FakeSocket.instances[0]?.sendFrame('btcusdt@ticker', { c: '80150.56', P: '1', h: '81000', l: '79000', v: '100' });
-    vi.advanceTimersByTime(100);
+    vi.advanceTimersByTime(260);
     expect(a.mock.lastCall?.[0].price).toBe(80150.56);
     expect(b.mock.lastCall?.[0].price).toBe(80150.56);
     leaveA(); vi.advanceTimersByTime(600);
@@ -33,7 +33,7 @@ describe('Shared market loading', () => {
     const store = createLiveFeedStore('Spot');
     const leave = store.subscribe(vi.fn());
     FakeSocket.instances[0]?.sendFrame('btcusdt@ticker', { c: '80150.56' });
-    vi.advanceTimersByTime(100); leave(); vi.advanceTimersByTime(600);
+    vi.advanceTimersByTime(260); leave(); vi.advanceTimersByTime(600);
     const listener = vi.fn(), stop = store.subscribe(listener);
     expect(listener.mock.lastCall?.[0].status).toBe('stale');
     expect(listener.mock.lastCall?.[0].price).toBe(80150.56);
@@ -45,10 +45,10 @@ describe('Shared market loading', () => {
     const stop = store.subscribe(listener);
     expect(FakeSocket.instances).toHaveLength(2);
     FakeSocket.instances[0]?.sendFrame('btcusdt@ticker', { c: '80150.56' });
-    vi.advanceTimersByTime(100);
+    vi.advanceTimersByTime(260);
     expect(listener.mock.lastCall?.[0].status).toBe('connecting');
     FakeSocket.instances[1]?.sendFrame('btcusdt@depth20', { b: [['80150', '2']], a: [['80151', '3']] });
-    vi.advanceTimersByTime(100);
+    vi.advanceTimersByTime(260);
     expect(listener.mock.lastCall?.[0].status).toBe('live');
     stop(); vi.advanceTimersByTime(600);
   });
