@@ -1,4 +1,6 @@
 # Market view
+- [ ] Restore real candles across spot, perpetual and embedded charts with source-labelled fallbacks.
+- [ ] Connect a verifiable dated ETF source if accessible; otherwise surface the precise source limitation.
 - [x] Optimize shared market connections, cached candle loading and verify live/older-data states.
 - [x] Build reference-inspired market heatmap and Fz Market Intelligence identity.
 - [x] Add minute-to-year timeframes and working market-view controls.
