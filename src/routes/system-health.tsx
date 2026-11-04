@@ -37,7 +37,7 @@ const checks: Check[] = [
   { name: 'Bybit stream (fallback)', kind: 'WebSocket', run: ws('wss://stream.bybit.com/v5/public/linear', { op: 'subscribe', args: ['tickers.BTCUSDT'] }) },
   { name: 'Binance REST', kind: 'HTTP', run: http('https://api.binance.com/api/v3/ping') },
   { name: 'Coinbase REST', kind: 'HTTP', run: http('https://api.exchange.coinbase.com/products/BTC-USD/ticker') },
-  { name: 'Candle server', kind: 'App server', run: async () => { const r: any = await getMarketCandles({ data: { market: 'spot', timeframe: '1h' } as any }); if (!r || (Array.isArray(r.klines) && !r.klines.length)) throw new Error('No candles'); } },
+  { name: 'Candle server', kind: 'App server', run: async () => { const r: any = await getMarketCandles({ data: { market: 'Spot', timeframe: '1h' } as any }); if (!r || (Array.isArray(r.klines) && !r.klines.length)) throw new Error('No candles'); } },
   { name: 'Database & sign-in', kind: 'Cloud', run: async () => { const { error } = await supabase.auth.getSession(); if (error) throw error; } },
   { name: 'Bitcoin ETF flows', kind: 'Data provider', note: 'Needs a paid licensed ETF data provider — not shown as connected to avoid fake numbers.' },
   { name: 'Institutional news', kind: 'Data provider', note: 'Needs a licensed news provider — not shown as connected to avoid fake headlines.' },
