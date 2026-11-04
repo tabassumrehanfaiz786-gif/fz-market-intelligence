@@ -18,7 +18,7 @@ export const Route = createFileRoute('/system-health')({
   component: Page,
 });
 
-type Result = { status: 'CHECKING' | 'LIVE' | 'DISCONNECTED' | 'NOT CONFIGURED'; ms?: number; note?: string };
+type Result = { status: 'CHECKING' | 'LIVE' | 'DISCONNECTED' | 'NOT CONFIGURED'; ms?: number; note?: string | undefined };
 type Check = { name: string; kind: string; run?: () => Promise<string | void>; note?: string };
 
 const timeout = <T,>(p: Promise<T>, ms = 6000) => Promise.race([p, new Promise<T>((_, r) => setTimeout(() => r(new Error('Timed out')), ms))]);
