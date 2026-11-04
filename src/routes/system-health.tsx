@@ -47,7 +47,7 @@ function Page() {
   const [res, setRes] = useState<Record<string, Result>>({});
   const runAll = useCallback(() => {
     checks.forEach((c) => {
-      if (!c.run) { setRes((s) => ({ ...s, [c.name]: { status: 'NOT CONFIGURED', note: c.note } })); return; }
+      if (!c.run) { setRes((s) => ({ ...s, [c.name]: { status: 'NOT CONFIGURED', note: c.note ?? '' } })); return; }
       setRes((s) => ({ ...s, [c.name]: { status: 'CHECKING' } }));
       const t = performance.now();
       timeout(c.run()).then(
