@@ -6,6 +6,7 @@ import { TerminalShell } from '@/components/platform/terminal-shell';
 import { PageHeader, DataBadge, SectionHeading, MethodNote } from '@/components/platform/research-ui';
 import { supabase } from '@/integrations/supabase/client';
 import { getMarketCandles } from '@/lib/market/candles.functions';
+import { checkExchangeProxy, getEtfFlows, getLiveNews } from '@/lib/market/public-feeds.functions';
 
 export const Route = createFileRoute('/system-health')({
   head: () => ({ meta: [
@@ -39,8 +40,10 @@ const checks: Check[] = [
   { name: 'Coinbase REST', kind: 'HTTP', run: http('https://api.exchange.coinbase.com/products/BTC-USD/ticker') },
   { name: 'Candle server', kind: 'App server', run: async () => { const r: any = await getMarketCandles({ data: { market: 'Spot', timeframe: '1h' } as any }); if (!r || (Array.isArray(r.klines) && !r.klines.length)) throw new Error('No candles'); } },
   { name: 'Database & sign-in', kind: 'Cloud', run: async () => { const { error } = await supabase.auth.getSession(); if (error) throw error; } },
-  { name: 'Bitcoin ETF flows', kind: 'Data provider', note: 'Needs a paid licensed ETF data provider — not shown as connected to avoid fake numbers.' },
-  { name: 'Institutional news', kind: 'Data provider', note: 'Needs a licensed news provider — not shown as connected to avoid fake headlines.' },
+  { name: 'Kraken stream (global)', kind: 'WebSocket', run: ws('wss://ws.kraken.com/v2', { method: 'subscribe', params: { channel: 'ticker', symbol: ['BTC/USD'] } }) },
+  { name: 'Exchange via app server', kind: 'Server proxy', run: async () => { const r = await checkExchangeProxy(); return `BTC $${r.price.toLocaleString()}`; } },
+  { name: 'Bitcoin ETF flows', kind: 'Public tracker', run: async () => { const r = await getEtfFlows(); if (r.error || !r.days.length) throw new Error('Source unreachable'); return `Latest ${r.days[0]!.date}`; } },
+  { name: 'Institutional news', kind: 'Publisher feeds', run: async () => { const r = await getLiveNews(); if (r.error) throw new Error('Feeds unreachable'); return `${r.items.length} headlines · ${r.sources.join(', ')}`; } },
 ];
 
 function Page() {
@@ -51,7 +54,7 @@ function Page() {
       setRes((s) => ({ ...s, [c.name]: { status: 'CHECKING' } }));
       const t = performance.now();
       timeout(c.run()).then(
-        () => setRes((s) => ({ ...s, [c.name]: { status: 'LIVE', ms: Math.round(performance.now() - t) } })),
+        (note) => setRes((s) => ({ ...s, [c.name]: { status: 'LIVE', ms: Math.round(performance.now() - t), note: note || undefined } })),
         (e) => setRes((s) => ({ ...s, [c.name]: { status: 'DISCONNECTED', note: e instanceof Error ? e.message : 'Failed' } })),
       );
     });
@@ -72,7 +75,7 @@ function Page() {
               <DataBadge status={r?.status === 'NOT CONFIGURED' ? 'UNAVAILABLE' : r?.status ?? 'CHECKING'} />
             </div>); })}
         </section>
-        <MethodNote>If Binance shows disconnected, your internet provider is blocking it; the app automatically uses Coinbase or Bybit instead.</MethodNote>
+        <MethodNote>If a Binance or Bybit line shows disconnected, your local network is likely blocking that exchange. The app switches to Coinbase automatically, and the app-server line shows market data still reaches you through our server.</MethodNote>
       </main>
     </TerminalShell>
   );
