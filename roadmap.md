@@ -1,4 +1,5 @@
 # Market view
+- [ ] Build dedicated Spot and Perpetual Bookmap-style workspaces with range presets, cursor-anchored zoom, drag/pinch navigation, crosshair, candles and trade bubbles; verify both routes.
 - [ ] Restore real candles across spot, perpetual and embedded charts with source-labelled fallbacks.
 - [ ] Connect a verifiable dated ETF source if accessible; otherwise surface the precise source limitation.
 - [x] Optimize shared market connections, cached candle loading and verify live/older-data states.

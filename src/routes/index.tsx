@@ -19,7 +19,6 @@ const quick=[
 ] as const;
 
 function Index(){
- const [market,setMarket]=useState('Spot');
  const [collapsed,setCollapsed]=useState(false);
  const [mobile,setMobile]=useState(false);
  return <div className={`terminal-shell ${collapsed?'collapsed':''} ${mobile?'mobile-open':''}`}>
