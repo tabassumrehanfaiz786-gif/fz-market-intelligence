@@ -44,7 +44,8 @@ function candleDuration(klines: Kline[]) {
 
 /** Real candles plus depth and executions recorded from the live stream during this browser session. */
 export function LiquidityHeatmap(props: Props) {
-  const { timeframe, market, visibleCount, zoom } = props;
+  const completeProps = { candles: true, visibleCount: 60, timeResetKey: 0, resetKey: 0, minTrade: 0, bubbleScale: 1, ...props };
+  const { timeframe, market, visibleCount, zoom } = completeProps;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hover, setHover] = useState<Hover | null>(null);
   const live = useBinanceLive(market);
@@ -52,7 +53,7 @@ export function LiquidityHeatmap(props: Props) {
   const snapshotsRef = useRef<DepthSnapshot[]>([]);
   const tradeHistoryRef = useRef<LiveTrade[]>([]);
   const sessionStartRef = useRef<number>(Date.now());
-  const latestRef = useRef({ props, live, klines, candleStatus, updatedAt, candleSource, candlePair });
+  const latestRef = useRef({ props: completeProps, live, klines, candleStatus, updatedAt, candleSource, candlePair });
   const priceViewRef = useRef<PriceView>({ zoom: 1, pan: 0 });
   const timeOffsetRef = useRef(0);
   const geometryRef = useRef<Geometry | null>(null);
@@ -61,7 +62,7 @@ export function LiquidityHeatmap(props: Props) {
   const pointersRef = useRef(new Map<number, { x: number; y: number }>());
   const pinchRef = useRef<{ distance: number; zoom: number } | null>(null);
 
-  latestRef.current = { props, live, klines, candleStatus, updatedAt, candleSource, candlePair };
+  latestRef.current = { props: completeProps, live, klines, candleStatus, updatedAt, candleSource, candlePair };
   hoverRef.current = hover;
 
   useEffect(() => {
@@ -124,11 +125,11 @@ export function LiquidityHeatmap(props: Props) {
         const nextCount = clamp(Math.round(count * Math.exp(dy * 0.0015)), 10, Math.max(10, geometry.total));
         const next = zoomTimeAt(geometry.total, count, timeOffsetRef.current, nextCount, px / geometry.w);
         timeOffsetRef.current = next.offset;
-        current.onVisibleCountChange(next.count >= geometry.total ? 0 : next.count);
+        current.onVisibleCountChange?.(next.count >= geometry.total ? 0 : next.count);
       } else {
         const nextZoom = clamp(priceViewRef.current.zoom * Math.exp(-dy * 0.0015), 1, 12);
         priceViewRef.current = zoomPriceAt(priceViewRef.current, nextZoom, py / geometry.h);
-        current.onZoomChange(nextZoom);
+        current.onZoomChange?.(nextZoom);
       }
     };
     canvas.addEventListener('wheel', onWheel, { passive: false });
@@ -173,9 +174,9 @@ export function LiquidityHeatmap(props: Props) {
       const profile = width < 500 ? 34 : 68;
       const w = Math.max(50, width - gutter - profile);
       const h = Math.max(80, height - 63);
-      const window = visibleTimeWindow(allKlines.length, current.visibleCount, timeOffsetRef.current);
-      timeOffsetRef.current = window.offset;
-      const visible = allKlines.slice(window.start, window.end);
+      const timeWindow = visibleTimeWindow(allKlines.length, current.visibleCount, timeOffsetRef.current);
+      timeOffsetRef.current = timeWindow.offset;
+      const visible = allKlines.slice(timeWindow.start, timeWindow.end);
       if (!visible.length) return;
 
       let baseMin = Infinity, baseMax = -Infinity;
@@ -196,7 +197,7 @@ export function LiquidityHeatmap(props: Props) {
       const span = Math.max(1, t1 - t0);
       const yOf = (price: number) => h - ((price - min) / range) * h;
       const xOf = (time: number) => ((time - t0) / span) * w;
-      geometryRef.current = { w, h, min, max, center, range, t0, t1, count: window.count, total: allKlines.length };
+      geometryRef.current = { w, h, min, max, center, range, t0, t1, count: timeWindow.count, total: allKlines.length };
 
       // Grid and axes.
       context.strokeStyle = color('--border');
@@ -353,7 +354,7 @@ export function LiquidityHeatmap(props: Props) {
       context.fillStyle = color('--muted-foreground');
       context.font = '9px "IBM Plex Mono", monospace';
       const coverage = snaps.length ? `DEPTH ${new Date(snaps[0]!.t).toISOString().slice(11, 19)}–${new Date(snaps.at(-1)!.t).toISOString().slice(11, 19)} UTC` : 'AWAITING SESSION DEPTH';
-      context.fillText(`${coverage} · ${window.count}/${allKlines.length} CANDLES`, 6, 13);
+      context.fillText(`${coverage} · ${timeWindow.count}/${allKlines.length} CANDLES`, 6, 13);
       context.textAlign = 'right';
       context.fillText(`${candlesFrom ?? 'EXCHANGE'} ${candlePair ?? ''} · ${candleTime ? new Date(candleTime).toISOString().slice(11, 19) : '—'} UTC`, w - 5, 13);
       context.textAlign = 'left';
@@ -405,7 +406,7 @@ export function LiquidityHeatmap(props: Props) {
             const anchorY = ((a!.y + b!.y) / 2 - rect.top) / geometry.h;
             const nextZoom = clamp(pinchRef.current.zoom * (distance / Math.max(1, pinchRef.current.distance)), 1, 12);
             priceViewRef.current = zoomPriceAt(priceViewRef.current, nextZoom, anchorY);
-            props.onZoomChange(nextZoom);
+            props.onZoomChange?.(nextZoom);
           } else if (dragRef.current?.id === event.pointerId && geometry) {
             const dx = event.clientX - dragRef.current.x, dy = event.clientY - dragRef.current.y;
             priceViewRef.current = panPrice(priceViewRef.current, dy / geometry.h);
