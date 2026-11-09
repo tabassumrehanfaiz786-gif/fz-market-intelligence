@@ -92,13 +92,13 @@ export function LiquidityHeatmap(props: Props) {
       ...live.bids.map(([p, q]) => [p, q] as [number, number]),
       ...live.asks.map(([p, q]) => [p, -q] as [number, number]),
     ];
-    const t = live.lastUpdate ?? Date.now();
+    const t = Date.now();
     const snaps = snapshotsRef.current;
     const previous = snaps.at(-1);
     if (previous && t - previous.t < 1000) snaps[snaps.length - 1] = { t, levels };
     else snaps.push({ t, levels });
     if (snaps.length > 1800) snaps.splice(0, snaps.length - 1800);
-  }, [live.bids, live.asks, live.status, live.lastUpdate, props.playing]);
+  }, [live.bids, live.asks, live.status, props.playing]);
 
   // Build a bounded session trade tape so bubbles do not disappear when the shared feed trims its latest trades.
   useEffect(() => {
@@ -397,9 +397,10 @@ export function LiquidityHeatmap(props: Props) {
           } else dragRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
         }}
         onPointerMove={(event) => {
-          pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+          const isActivePointer = pointersRef.current.has(event.pointerId);
+          if (isActivePointer) pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
           const geometry = geometryRef.current;
-          if (pointersRef.current.size === 2 && pinchRef.current && geometry) {
+          if (isActivePointer && pointersRef.current.size === 2 && pinchRef.current && geometry) {
             const [a, b] = [...pointersRef.current.values()];
             const distance = Math.hypot(a!.x - b!.x, a!.y - b!.y);
             const rect = event.currentTarget.getBoundingClientRect();
