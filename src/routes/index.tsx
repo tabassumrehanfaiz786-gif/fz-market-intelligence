@@ -24,9 +24,9 @@ function Index(){
  return <div className={`terminal-shell ${collapsed?'collapsed':''} ${mobile?'mobile-open':''}`}>
   <aside className="sidebar institutional-sidebar">
    <div className="flex items-center gap-3"><div className="brand-mark">Fz</div><div className="sidebar-copy brand-title">Market<br/>Intelligence</div><Button variant="ghost" size="icon" className="sm:hidden ml-auto" title="Close navigation" onClick={()=>setMobile(false)}><X/></Button></div>
-   <div className="sidebar-label">Markets</div>
-   <Button variant="terminal" className="nav-item" data-active={market==='Spot'} title="BTC spot heatmap" onClick={()=>{setMarket('Spot');setMobile(false);}}><Activity/><span className="sidebar-copy">Spot heatmap</span></Button>
-   <Button variant="terminal" className="nav-item" data-active={market==='Perpetual'} title="BTC perpetual heatmap" onClick={()=>{setMarket('Perpetual');setMobile(false);}}><Waves/><span className="sidebar-copy">Perpetual heatmap</span></Button>
+   <div className="sidebar-label">Bookmap workspaces</div>
+   <Button variant="terminal" className="nav-item" title="Open the dedicated BTC spot heatmap" asChild><Link to="/spot" onClick={()=>setMobile(false)}><Activity/><span className="sidebar-copy">Spot heatmap</span></Link></Button>
+   <Button variant="terminal" className="nav-item" title="Open the dedicated BTC perpetual heatmap" asChild><Link to="/perpetual" onClick={()=>setMobile(false)}><Waves/><span className="sidebar-copy">Perpetual heatmap</span></Link></Button>
    <nav className="platform-nav">{navGroups.map(g=><div key={g.label}><div className="sidebar-label">{g.label}</div>{g.items.map(item=><Button variant="terminal" className="nav-item" asChild key={item.path}><Link to={item.path} title={item.title}><item.icon/><span className="sidebar-copy">{item.title}</span></Link></Button>)}</div>)}</nav>
    <div className="mt-auto border-t border-border pt-4"><div className="sidebar-copy flex items-center gap-2 text-[11px] text-muted-foreground"><span className="status-dot"/>Live market workspace</div><Button variant="ghost" size="icon" className="mt-3 text-muted-foreground hidden sm:inline-flex" title={collapsed?'Expand sidebar':'Collapse sidebar'} onClick={()=>setCollapsed(s=>!s)}>{collapsed?<ChevronRight/>:<ChevronLeft/>}</Button></div>
   </aside>
