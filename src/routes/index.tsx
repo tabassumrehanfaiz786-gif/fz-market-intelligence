@@ -37,7 +37,7 @@ function Index(){
     <Button variant="terminal" size="sm" className="nav-item shrink-0" data-active="true"><Layers/>Heatmap</Button>
     {quick.map(q=><Button key={q.path} variant="outline" size="sm" className="shrink-0" asChild><Link to={q.path}>{q.title}</Link></Button>)}
    </div>
-   <MarketView initialMarket={market} key={market}/>
+   <MarketView initialMarket="Spot"/>
   </div>
  </div>;
 }

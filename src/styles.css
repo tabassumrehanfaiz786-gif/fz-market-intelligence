@@ -134,3 +134,60 @@
 .depth-row::before { content:''; position:absolute; right:0; top:0; bottom:0; width:var(--w); opacity:.12; }
 .depth-row[data-side=bid]::before { background:var(--positive); } .depth-row[data-side=ask]::before { background:var(--negative); }
 .depth-row > * { position:relative; }
+
+/* Dedicated Bookmap workspace */
+.bookmap-workspace { max-width:2000px; padding-top:20px; }
+.bookmap-stats { margin:17px 0 14px; }
+.bookmap-stats .market-stat { padding-block:11px; }
+.bookmap-stats .stat-value { font-size:19px; }
+.bookmap-panel { box-shadow:var(--shadow-panel); }
+.bookmap-panel:fullscreen { border:0; border-radius:0; display:flex; flex-direction:column; }
+.bookmap-panel:fullscreen .bookmap-area { flex:1; height:auto; min-height:0; }
+.bookmap-product { font-family:var(--font-mono); font-size:12px; font-weight:500; white-space:nowrap; }
+.toolbar-caption { color:var(--muted-foreground); font-family:var(--font-mono); font-size:9px; letter-spacing:.06em; margin-right:7px; white-space:nowrap; }
+.bookmap-time-toolbar { padding-block:7px; }
+.bookmap-rangebar { padding-block:6px; background:color-mix(in oklab,var(--secondary) 45%,var(--card)); border-bottom:1px solid var(--border); }
+.range-control,.price-zoom-control { display:flex; align-items:center; gap:3px; }
+.range-control button { min-width:31px; height:24px; padding:0 8px; font-family:var(--font-mono); }
+.range-unit { color:var(--muted-foreground); font-size:9px; margin-left:4px; }
+.price-zoom-control > span.font-mono { min-width:43px; text-align:center; }
+.bookmap-controls { display:flex; align-items:center; flex-wrap:wrap; gap:10px 17px; padding:8px 15px; border-bottom:1px solid var(--border); }
+.bookmap-controls input[type=range] { width:76px; }
+.bookmap-select { background:var(--secondary); color:var(--foreground); border:1px solid var(--border); border-radius:3px; padding:3px 5px; font-family:var(--font-mono); font-size:9px; }
+.bookmap-source { margin-left:auto; color:var(--muted-foreground); font-family:var(--font-mono); font-size:8px; }
+.bookmap-area { height:590px; background:var(--chart-bg); cursor:crosshair; }
+.bookmap-area canvas { user-select:none; -webkit-user-select:none; }
+.bookmap-tooltip { z-index:4; max-width:235px; line-height:1.55; }
+.bookmap-status { position:absolute; bottom:1px; left:8px; right:8px; display:flex; gap:14px; color:var(--muted-foreground); font-family:var(--font-mono); font-size:8px; pointer-events:none; }
+.bookmap-status span:last-child { margin-left:auto; }
+.bookmap-legend { gap:12px; }
+.heat-legend { display:flex; align-items:center; gap:6px; }
+.heat-legend i { display:inline-block; width:70px; height:5px; background:linear-gradient(90deg,var(--heat-low),var(--heat-mid),var(--heat-high),var(--heat-hot)); }
+.bookmap-lower-grid { margin-top:15px; }
+.bookmap-lower-grid .delta-chart { height:110px; }
+@media(min-width:1550px) { .bookmap-area { height:660px; } }
+@media(max-width:900px) { .bookmap-source { width:100%; margin-left:0; } .bookmap-area { height:540px; } }
+@media(max-width:640px) {
+ .bookmap-workspace { padding:15px 8px; }
+ .bookmap-workspace .market-heading { padding-inline:4px; }
+ .bookmap-stats { margin:13px 0 10px; }
+ .bookmap-stats .market-stat { padding:8px 10px; }
+ .bookmap-primary-toolbar { flex-wrap:nowrap; }
+ .bookmap-product { font-size:10px; }
+ .bookmap-time-toolbar { flex-wrap:nowrap; align-items:flex-start; }
+ .bookmap-time-toolbar .timeframe-row { flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; }
+ .bookmap-time-toolbar > button { flex-shrink:0; font-size:9px; padding-inline:7px; }
+ .toolbar-caption { display:none; }
+ .bookmap-rangebar { flex-wrap:nowrap; padding-inline:8px; }
+ .range-unit { display:none; }
+ .price-zoom-control { margin-left:auto; }
+ .bookmap-controls { gap:8px 12px; padding:8px 9px; }
+ .bookmap-controls .control-label { font-size:9px; }
+ .bookmap-controls input[type=range] { width:58px; }
+ .bookmap-area { height:510px; }
+ .bookmap-legend { font-size:8px; }
+ .bookmap-legend > span { width:100%; }
+ .bookmap-status { gap:8px; }
+ .heat-legend i { width:45px; }
+}
+@media(prefers-reduced-motion:reduce) { .bookmap-panel { animation:none; } }
