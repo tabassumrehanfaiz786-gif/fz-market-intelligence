@@ -25,6 +25,7 @@ describe('Bookmap viewport calculations', () => {
     const result = zoomTimeAt(120, 60, 0, 30, 0.5);
     expect(result.count).toBe(30);
     expect(result.start).toBeGreaterThan(60);
-    expect(result.end).toBe(120);
+    const focusedIndex = result.start + 0.5 * (result.count - 1);
+    expect(focusedIndex).toBeCloseTo(60 + 0.5 * 59, 0);
   });
 });

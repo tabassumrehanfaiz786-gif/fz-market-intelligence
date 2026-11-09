@@ -14,18 +14,18 @@ type Props = {
   timeframe: Timeframe;
   intensity: number;
   bubbles: boolean;
-  candles: boolean;
+  candles?: boolean;
   vwap: boolean;
   market: string;
   zoom: number;
-  onZoomChange: (zoom: number) => void;
-  visibleCount: number;
-  onVisibleCountChange: (count: number) => void;
-  timeResetKey: number;
-  resetKey: number;
+  onZoomChange?: (zoom: number) => void;
+  visibleCount?: number;
+  onVisibleCountChange?: (count: number) => void;
+  timeResetKey?: number;
+  resetKey?: number;
   playing: boolean;
-  minTrade: number;
-  bubbleScale: number;
+  minTrade?: number;
+  bubbleScale?: number;
 };
 
 function timeLabel(t: number, timeframe: string, withDate = false) {
