@@ -6,7 +6,7 @@ import { TerminalShell } from '@/components/platform/terminal-shell';
 import { PageHeader, DataBadge, SectionHeading, MethodNote } from '@/components/platform/research-ui';
 import { supabase } from '@/integrations/supabase/client';
 import { getMarketCandles } from '@/lib/market/candles.functions';
-import { checkExchangeProxy, getEtfFlows, getLiveNews } from '@/lib/market/public-feeds.functions';
+import { checkExchangeProxy, getEtfFlows, getLiveNews, getPerpSnapshot } from '@/lib/market/public-feeds.functions';
 
 export const Route = createFileRoute('/system-health')({
   head: () => ({ meta: [
@@ -23,15 +23,16 @@ type Result = { status: 'CHECKING' | 'LIVE' | 'DISCONNECTED' | 'NOT CONFIGURED';
 type Check = { name: string; kind: string; run?: () => Promise<string | void>; note?: string };
 
 const timeout = <T,>(p: Promise<T>, ms = 6000) => Promise.race([p, new Promise<T>((_, r) => setTimeout(() => r(new Error('Timed out')), ms))]);
-const http = (url: string) => async () => { const r = await fetch(url); if (!r.ok) throw new Error(`HTTP ${r.status}`); };
+const http = (url: string) => async () => { const r = await fetch(url).catch(() => { throw new Error('Blocked by your local network — app uses fallback'); }); if (!r.ok) throw new Error(`HTTP ${r.status}`); };
 const ws = (url: string, sub?: unknown) => () => new Promise<void>((res, rej) => {
   const s = new WebSocket(url);
   s.onopen = () => { if (sub) s.send(JSON.stringify(sub)); else { s.close(); res(); } };
   s.onmessage = () => { s.close(); res(); };
-  s.onerror = () => rej(new Error('Blocked or unreachable'));
+  s.onerror = () => rej(new Error('Blocked by your local network — app uses fallback'));
 });
 
 const checks: Check[] = [
+  { name: 'Perpetual feed via app server', kind: 'Server proxy', run: async () => { const r = await getPerpSnapshot(); if (!r) throw new Error('Unreachable'); return `${r.source} · $${r.price.toLocaleString()}`; } },
   { name: 'Binance spot stream', kind: 'WebSocket', run: ws('wss://stream.binance.com:9443/ws/btcusdt@trade') },
   { name: 'Binance futures stream', kind: 'WebSocket', run: ws('wss://fstream.binance.com/ws/btcusdt@aggTrade') },
   { name: 'Coinbase stream (fallback)', kind: 'WebSocket', run: ws('wss://ws-feed.exchange.coinbase.com', { type: 'subscribe', product_ids: ['BTC-USD'], channels: ['ticker'] }) },
