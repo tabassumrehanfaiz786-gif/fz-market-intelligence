@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useBinanceLive, type LiveState, type LiveTrade } from '@/lib/market/use-binance-live';
 import { useKlines, klinesVwap, type Kline } from '@/lib/market/use-klines';
+import { getDeepBook } from '@/lib/market/deep-book.functions';
 import { clamp, panPrice, visibleTimeWindow, zoomPriceAt, zoomTimeAt, type PriceView } from '@/lib/market/bookmap-math';
 
 export const timeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1D', '1W', '1M', '6M', '1Y'] as const;
@@ -40,6 +41,14 @@ function candleDuration(klines: Kline[]) {
   if (klines.length < 2) return 60000;
   const differences = klines.slice(1).map((k, i) => k.time - klines[i]!.time).filter((d) => d > 0).sort((a, b) => a - b);
   return differences[Math.floor(differences.length / 2)] ?? 60000;
+}
+
+/** Continuous thermal colormap: navy → blue → cyan → yellow → orange → white-hot. */
+const heatStops: [number, number, number][] = [[12, 30, 70], [20, 80, 170], [0, 200, 230], [250, 230, 60], [255, 120, 20], [255, 250, 235]];
+function heatColor(t: number) {
+  const x = clamp(t, 0, 1) * (heatStops.length - 1), i = Math.min(heatStops.length - 2, Math.floor(x)), f = x - i;
+  const a = heatStops[i]!, b = heatStops[i + 1]!;
+  return `rgb(${Math.round(a[0] + (b[0] - a[0]) * f)},${Math.round(a[1] + (b[1] - a[1]) * f)},${Math.round(a[2] + (b[2] - a[2]) * f)})`;
 }
 
 /** Real candles plus depth and executions recorded from the live stream during this browser session. */
@@ -85,8 +94,33 @@ export function LiquidityHeatmap(props: Props) {
     }
   }, [zoom]);
 
-  // One depth snapshot per second, retained for up to thirty minutes. No historical depth is invented.
+  // Deep public order book (up to 1,000 levels) every 2s, recorded only during this session. No historical depth is invented.
+  const deepAtRef = useRef(0);
+  const [depthSource, setDepthSource] = useState<string | null>(null);
   useEffect(() => {
+    if (!props.playing) return;
+    let cancelled = false;
+    const pull = async () => {
+      try {
+        const book = await getDeepBook({ data: { market: market === 'Perpetual' ? 'Perpetual' : 'Spot' } });
+        if (cancelled || book.error) return;
+        const levels: [number, number][] = [...book.bids.map(([p, q]) => [p, q] as [number, number]), ...book.asks.map(([p, q]) => [p, -q] as [number, number])];
+        const snaps = snapshotsRef.current;
+        if (snaps.at(-1)?.t === book.time) return;
+        snaps.push({ t: Date.now(), levels });
+        if (snaps.length > 1800) snaps.splice(0, snaps.length - 1800);
+        deepAtRef.current = Date.now();
+        setDepthSource(book.source);
+      } catch { /* live stream snapshots still record */ }
+    };
+    pull();
+    const id = window.setInterval(pull, 2000);
+    return () => { cancelled = true; window.clearInterval(id); };
+  }, [market, props.playing]);
+
+  // Fallback: live-stream top-of-book snapshots when the deep book is unavailable.
+  useEffect(() => {
+    if (Date.now() - deepAtRef.current < 6000) return;
     if (live.status === 'disconnected' || !props.playing || (!live.bids.length && !live.asks.length)) return;
     const levels: [number, number][] = [
       ...live.bids.map(([p, q]) => [p, q] as [number, number]),
@@ -95,8 +129,8 @@ export function LiquidityHeatmap(props: Props) {
     const t = Date.now();
     const snaps = snapshotsRef.current;
     const previous = snaps.at(-1);
-    if (previous && t - previous.t < 1000) snaps[snaps.length - 1] = { t, levels };
-    else snaps.push({ t, levels });
+    if (previous && t - previous.t < 1000) return;
+    snaps.push({ t, levels });
     if (snaps.length > 1800) snaps.splice(0, snaps.length - 1800);
   }, [live.bids, live.asks, live.status, props.playing]);
 
@@ -222,29 +256,41 @@ export function LiquidityHeatmap(props: Props) {
       }
       context.textAlign = 'left';
 
-      // Session-only order-book heatmap aligned to exchange timestamps.
-      const snaps = snapshotsRef.current.filter((s) => s.t >= t0 && s.t <= t1);
-      if (snaps.length) {
-        const quantities: number[] = [];
-        for (const snap of snaps) for (const level of snap.levels) quantities.push(Math.abs(level[1]));
-        quantities.sort((a, b) => a - b);
-        const referenceQ = Math.max(1e-9, quantities[Math.floor(quantities.length * 0.95)] ?? 1);
-        const rows = 120, cellH = h / rows;
-        snaps.forEach((snap, index) => {
-          const x = xOf(snap.t);
-          const nextX = index + 1 < snaps.length ? xOf(snaps[index + 1]!.t) : x + Math.max(2, w / 180);
-          const colW = clamp(nextX - x, Math.max(2, w / 160), Math.max(3, w / 60));
-          if (x + colW < 0 || x > w) return;
-          for (const [price, signedQ] of snap.levels) {
-            const y = yOf(price);
-            if (y < -cellH || y > h + cellH) continue;
-            const strength = clamp(Math.pow(Math.abs(signedQ) / referenceQ, 0.55) * (current.intensity / 65), 0, 1);
-            context.globalAlpha = 0.12 + strength * 0.82;
-            context.fillStyle = color(strength > 0.88 ? '--heat-hot' : strength > 0.65 ? '--heat-high' : strength > 0.35 ? '--heat-mid' : '--heat-low');
-            context.fillRect(x, y - cellH / 2, colW + 0.5, Math.max(1, cellH - 0.35));
-          }
-        });
-        context.globalAlpha = 1;
+      // Session-only order-book heatmap: price-binned, continuous thermal bands.
+      const now = Date.now();
+      const snaps = snapshotsRef.current.filter((s) => s.t <= t1);
+      const rows = Math.max(80, Math.min(260, Math.round(h / 2.5))), cellH = h / rows;
+      const binned = snaps.map((snap) => {
+        const bins = new Float32Array(rows);
+        for (const [price, q] of snap.levels) {
+          const r = Math.floor(((max - price) / range) * rows);
+          if (r >= 0 && r < rows) bins[r]! += Math.abs(q);
+        }
+        return bins;
+      });
+      const all: number[] = [];
+      for (const bins of binned) for (const v of bins) if (v > 0) all.push(v);
+      all.sort((x, y) => x - y);
+      const refQ = Math.max(1e-9, all[Math.floor(all.length * 0.97)] ?? 1);
+      for (let i = 0; i < snaps.length; i++) {
+        const x = Math.max(0, xOf(snaps[i]!.t));
+        const endT = i + 1 < snaps.length ? Math.min(snaps[i + 1]!.t, snaps[i]!.t + 15000) : Math.min(now, t1);
+        const x2 = Math.min(w, Math.max(xOf(endT), x + 2));
+        if (x2 <= 0 || x >= w) continue;
+        const bins = binned[i]!;
+        for (let r = 0; r < rows; r++) {
+          const v = bins[r]!;
+          if (v <= 0) continue;
+          const strength = clamp(Math.pow(v / refQ, 0.6) * (current.intensity / 65), 0, 1);
+          context.globalAlpha = 0.15 + strength * 0.85;
+          context.fillStyle = heatColor(strength);
+          context.fillRect(x, r * cellH, x2 - x + 0.6, cellH + 0.4);
+        }
+      }
+      context.globalAlpha = 1;
+      if (snaps.length && xOf(snaps[0]!.t) > 40) {
+        context.fillStyle = color('--muted-foreground');
+        context.fillText('◀ no recorded depth before session start', 6, h - 8);
       }
 
       // Close trace and optional real candlesticks.
