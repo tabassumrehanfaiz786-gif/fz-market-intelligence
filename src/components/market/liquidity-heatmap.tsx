@@ -87,7 +87,7 @@ export function LiquidityHeatmap(props: Props) {
 
   // One depth snapshot per second, retained for up to thirty minutes. No historical depth is invented.
   useEffect(() => {
-    if (live.status !== 'live' || !props.playing || (!live.bids.length && !live.asks.length)) return;
+    if (live.status === 'disconnected' || !props.playing || (!live.bids.length && !live.asks.length)) return;
     const levels: [number, number][] = [
       ...live.bids.map(([p, q]) => [p, q] as [number, number]),
       ...live.asks.map(([p, q]) => [p, -q] as [number, number]),
@@ -233,7 +233,7 @@ export function LiquidityHeatmap(props: Props) {
         snaps.forEach((snap, index) => {
           const x = xOf(snap.t);
           const nextX = index + 1 < snaps.length ? xOf(snaps[index + 1]!.t) : x + Math.max(2, w / 180);
-          const colW = clamp(nextX - x, 1.5, Math.max(2, w / 180));
+          const colW = clamp(nextX - x, Math.max(2, w / 160), Math.max(3, w / 60));
           if (x + colW < 0 || x > w) return;
           for (const [price, signedQ] of snap.levels) {
             const y = yOf(price);

@@ -1,5 +1,6 @@
 import type { LiveLevel, LiveState, LiveTrade } from './use-binance-live';
 import { openCoinbase } from './exchange-stream';
+import { getPerpSnapshot } from './public-feeds.functions';
 
 export const emptyLiveState: LiveState = { status: 'connecting', price: null, change24h: null, high24h: null, low24h: null, volume24h: null, trades: [], bids: [], asks: [], lastUpdate: null };
 
@@ -113,7 +114,10 @@ export function createLiveFeedStore(market: string) {
         update({ ...next, status: 'live', lastUpdate: Date.now(), source: 'Bybit' });
       } catch { /* ignore malformed frames */ }
     };
+    // If Bybit is also blocked locally, poll the app server (OKX/Bybit fetched server-side).
+    const bybitGiveUp = setTimeout(() => { if (active && !seen.has('bybit')) { ws.onclose = null; ws.close(); startServerPoll(); } }, 5000);
     ws.onclose = () => {
+      clearTimeout(bybitGiveUp);
       if (fallback === ws) fallback = null;
       seen.delete('bybit');
       if (!active) return;
@@ -122,8 +126,26 @@ export function createLiveFeedStore(market: string) {
     };
     ws.onerror = () => ws.close();
   };
+  let pollTimer: ReturnType<typeof setTimeout> | undefined;
+  const startServerPoll = () => {
+    sockets.forEach((x) => x.close());
+    fallback = { close: () => clearTimeout(pollTimer) } as unknown as WebSocket;
+    const tick = async () => {
+      if (!active) return;
+      try {
+        const r = await getPerpSnapshot();
+        if (r && active) {
+          seen.set('bybit', Date.now());
+          const ids = new Set(r.trades.map((t) => t.id));
+          update({ ...state, status: 'live', lastUpdate: Date.now(), source: r.source, price: r.price, change24h: r.change24h, high24h: r.high24h, low24h: r.low24h, volume24h: r.volume24h, bids: r.bids as LiveLevel[], asks: r.asks as LiveLevel[], trades: [...(r.trades as LiveTrade[]), ...state.trades.filter((t) => !ids.has(t.id))].sort((a, b) => b.time - a.time).slice(0, 40) });
+        }
+      } catch { /* next poll retries */ }
+      if (active) pollTimer = setTimeout(tick, 1500);
+    };
+    tick();
+  };
   const stop = () => {
-    active = false;
+    active = false; clearTimeout(pollTimer);
     clearTimeout(fallbackTimer); coinbaseStop?.(); coinbaseStop = undefined; if (fallback?.close) fallback.close(); fallback = null; seen.delete('bybit');
     clearInterval(staleTimer); clearTimeout(flushTimer);
     flushTimer = undefined;
